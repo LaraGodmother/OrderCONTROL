@@ -3,7 +3,8 @@ export const RESTAURANT = {
   tagline: "Sabor que você vai amar",
   whatsapp: "5511999999999",
   phone: "(11) 9999-9999",
-  address: "Av. Paulista, 1000 - São Paulo, SP",
+  address: "Av. Paulista, 1000",
+  city: "São Paulo, SP",
   openingHours: [
     { day: "Seg - Sex", hours: "11h às 23h" },
     { day: "Sábado", hours: "11h às 00h" },

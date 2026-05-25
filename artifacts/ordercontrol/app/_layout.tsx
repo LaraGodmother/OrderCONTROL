@@ -12,8 +12,10 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AuthProvider } from "@/context/AuthContext";
 import { CartProvider } from "@/context/CartContext";
+import { ChatProvider } from "@/context/ChatContext";
 import { LangProvider } from "@/context/LangContext";
 import { OrderProvider } from "@/context/OrderContext";
+import { RestaurantProvider } from "@/context/RestaurantContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync();
@@ -42,28 +44,34 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <KeyboardProvider>
             <LangProvider>
-              <AuthProvider>
-                <OrderProvider>
-                  <CartProvider>
-                    <Stack screenOptions={{ headerShown: false }}>
-                      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                      <Stack.Screen name="auth/login" options={{ headerShown: false, presentation: "modal" }} />
-                      <Stack.Screen name="auth/register" options={{ headerShown: false, presentation: "modal" }} />
-                      <Stack.Screen name="product/[id]" options={{ headerShown: false, presentation: "modal" }} />
-                      <Stack.Screen name="order/[id]" options={{ headerShown: false }} />
-                      <Stack.Screen name="checkout" options={{ headerShown: false }} />
-                      <Stack.Screen name="notifications" options={{ headerShown: false, presentation: "modal" }} />
-                      <Stack.Screen name="admin/index" options={{ headerShown: false }} />
-                      <Stack.Screen name="admin/orders" options={{ headerShown: false }} />
-                      <Stack.Screen name="admin/products" options={{ headerShown: false }} />
-                      <Stack.Screen name="admin/categories" options={{ headerShown: false }} />
-                      <Stack.Screen name="admin/promotions" options={{ headerShown: false }} />
-                      <Stack.Screen name="admin/reports" options={{ headerShown: false }} />
-                      <Stack.Screen name="admin/settings" options={{ headerShown: false }} />
-                    </Stack>
-                  </CartProvider>
-                </OrderProvider>
-              </AuthProvider>
+              <RestaurantProvider>
+                <AuthProvider>
+                  <OrderProvider>
+                    <CartProvider>
+                      <ChatProvider>
+                        <Stack screenOptions={{ headerShown: false }}>
+                          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                          <Stack.Screen name="auth/login" options={{ headerShown: false, presentation: "modal" }} />
+                          <Stack.Screen name="auth/register" options={{ headerShown: false, presentation: "modal" }} />
+                          <Stack.Screen name="product/[id]" options={{ headerShown: false, presentation: "modal" }} />
+                          <Stack.Screen name="order/[id]" options={{ headerShown: false }} />
+                          <Stack.Screen name="checkout" options={{ headerShown: false }} />
+                          <Stack.Screen name="notifications" options={{ headerShown: false, presentation: "modal" }} />
+                          <Stack.Screen name="chat" options={{ headerShown: false }} />
+                          <Stack.Screen name="admin/index" options={{ headerShown: false }} />
+                          <Stack.Screen name="admin/orders" options={{ headerShown: false }} />
+                          <Stack.Screen name="admin/products" options={{ headerShown: false }} />
+                          <Stack.Screen name="admin/categories" options={{ headerShown: false }} />
+                          <Stack.Screen name="admin/promotions" options={{ headerShown: false }} />
+                          <Stack.Screen name="admin/reports" options={{ headerShown: false }} />
+                          <Stack.Screen name="admin/settings" options={{ headerShown: false }} />
+                          <Stack.Screen name="admin/chat" options={{ headerShown: false }} />
+                        </Stack>
+                      </ChatProvider>
+                    </CartProvider>
+                  </OrderProvider>
+                </AuthProvider>
+              </RestaurantProvider>
             </LangProvider>
           </KeyboardProvider>
         </SafeAreaProvider>

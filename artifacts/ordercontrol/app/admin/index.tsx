@@ -14,6 +14,7 @@ import { useColors } from "@/hooks/useColors";
 import { useLang } from "@/context/LangContext";
 import { useOrders } from "@/context/OrderContext";
 import { useAuth } from "@/context/AuthContext";
+import { useChat } from "@/context/ChatContext";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 
 export default function AdminDashboard() {
@@ -22,6 +23,7 @@ export default function AdminDashboard() {
   const { t } = useLang();
   const { getAllOrders, updateOrderStatus } = useOrders();
   const { user, logout } = useAuth();
+  const { totalUnread } = useChat();
   const router = useRouter();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
@@ -40,27 +42,38 @@ export default function AdminDashboard() {
   ];
 
   const MENU_ITEMS = [
-    { label: "Gerenciar Pedidos", icon: "list", route: "/admin/orders" },
-    { label: "Produtos", icon: "package", route: "/admin/products" },
-    { label: "Categorias", icon: "grid", route: "/admin/categories" },
-    { label: "Promoções", icon: "tag", route: "/admin/promotions" },
-    { label: "Configurações do Restaurante", icon: "settings", route: "/admin/settings" },
-    { label: "Relatórios", icon: "bar-chart-2", route: "/admin/reports" },
+    { label: t("manage_orders"), icon: "list", route: "/admin/orders", badge: activeOrders.length > 0 ? activeOrders.length : 0 },
+    { label: t("chat"), icon: "message-circle", route: "/admin/chat", badge: totalUnread },
+    { label: t("product_name"), icon: "package", route: "/admin/products", badge: 0 },
+    { label: t("categories"), icon: "grid", route: "/admin/categories", badge: 0 },
+    { label: t("promotions"), icon: "tag", route: "/admin/promotions", badge: 0 },
+    { label: t("settings"), icon: "settings", route: "/admin/settings", badge: 0 },
+    { label: t("daily_report"), icon: "bar-chart-2", route: "/admin/reports", badge: 0 },
   ];
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      contentContainerStyle={{ paddingBottom: 40 }}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Header */}
       <View style={[styles.header, { paddingTop: topPad + 10, backgroundColor: colors.secondary }]}>
         <View>
-          <Text style={styles.headerTitle}>Painel Admin</Text>
-          <Text style={styles.headerSub}>Olá, {user?.name?.split(" ")[0] ?? "Admin"}</Text>
+          <Text style={styles.headerTitle}>{t("admin_panel")}</Text>
+          <Text style={styles.headerSub}>{t("hello")} {user?.name?.split(" ")[0] ?? "Admin"}</Text>
         </View>
         <View style={styles.headerActions}>
           <Pressable onPress={() => router.push("/(tabs)")} style={styles.headerBtn}>
             <Feather name="eye" size={20} color="#fff" />
           </Pressable>
-          <Pressable onPress={async () => { await logout(); router.replace("/auth/login"); }} style={styles.headerBtn}>
+          <Pressable
+            onPress={async () => {
+              await logout();
+              router.replace("/auth/login");
+            }}
+            style={styles.headerBtn}
+          >
             <Feather name="log-out" size={20} color="#fff" />
           </Pressable>
         </View>
@@ -84,40 +97,56 @@ export default function AdminDashboard() {
         {activeOrders.length > 0 && (
           <View>
             <View style={styles.sectionHeader}>
-              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Pedidos Ativos</Text>
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("active_orders_section")}</Text>
               <Pressable onPress={() => router.push("/admin/orders")}>
-                <Text style={[styles.seeAll, { color: colors.primary }]}>Ver todos</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>{t("see_all")}</Text>
               </Pressable>
             </View>
             {activeOrders.slice(0, 3).map((order) => (
               <View key={order.id} style={[styles.orderCard, { backgroundColor: colors.card }]}>
                 <View style={styles.orderCardHeader}>
-                  <Text style={[styles.orderNumber, { color: colors.foreground }]}>{order.orderNumber} — {order.customerName}</Text>
+                  <Text style={[styles.orderNumber, { color: colors.foreground }]}>
+                    {order.orderNumber} — {order.customerName}
+                  </Text>
                   <OrderStatusBadge status={order.status} />
                 </View>
                 <Text style={[styles.orderItems, { color: colors.mutedForeground }]} numberOfLines={1}>
                   {order.items.map((i) => `${i.quantity}x ${i.name}`).join(", ")}
                 </Text>
                 <View style={styles.orderActions}>
-                  <Text style={[styles.orderTotal, { color: colors.primary }]}>R$ {order.total.toFixed(2).replace(".", ",")}</Text>
+                  <Text style={[styles.orderTotal, { color: colors.primary }]}>
+                    R$ {order.total.toFixed(2).replace(".", ",")}
+                  </Text>
                   {order.status === "received" && (
-                    <Pressable onPress={() => updateOrderStatus(order.id, "preparing")} style={[styles.actionBtn, { backgroundColor: colors.success }]}>
+                    <Pressable
+                      onPress={() => updateOrderStatus(order.id, "preparing")}
+                      style={[styles.actionBtn, { backgroundColor: colors.success }]}
+                    >
                       <Text style={styles.actionBtnText}>{t("accept")}</Text>
                     </Pressable>
                   )}
                   {order.status === "preparing" && (
-                    <Pressable onPress={() => updateOrderStatus(order.id, "ready")} style={[styles.actionBtn, { backgroundColor: "#2563EB" }]}>
-                      <Text style={styles.actionBtnText}>Pronto</Text>
+                    <Pressable
+                      onPress={() => updateOrderStatus(order.id, "ready")}
+                      style={[styles.actionBtn, { backgroundColor: "#2563EB" }]}
+                    >
+                      <Text style={styles.actionBtnText}>{t("ready_btn")}</Text>
                     </Pressable>
                   )}
                   {order.status === "ready" && (
-                    <Pressable onPress={() => updateOrderStatus(order.id, "delivering")} style={[styles.actionBtn, { backgroundColor: "#7C3AED" }]}>
-                      <Text style={styles.actionBtnText}>Enviar</Text>
+                    <Pressable
+                      onPress={() => updateOrderStatus(order.id, "delivering")}
+                      style={[styles.actionBtn, { backgroundColor: "#7C3AED" }]}
+                    >
+                      <Text style={styles.actionBtnText}>{t("send_btn")}</Text>
                     </Pressable>
                   )}
                   {order.status === "delivering" && (
-                    <Pressable onPress={() => updateOrderStatus(order.id, "delivered")} style={[styles.actionBtn, { backgroundColor: "#16A34A" }]}>
-                      <Text style={styles.actionBtnText}>Entregue</Text>
+                    <Pressable
+                      onPress={() => updateOrderStatus(order.id, "delivered")}
+                      style={[styles.actionBtn, { backgroundColor: "#16A34A" }]}
+                    >
+                      <Text style={styles.actionBtnText}>{t("delivered_btn")}</Text>
                     </Pressable>
                   )}
                 </View>
@@ -127,15 +156,27 @@ export default function AdminDashboard() {
         )}
 
         {/* Menu */}
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Gerenciamento</Text>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("management")}</Text>
         <View style={styles.menuGrid}>
           {MENU_ITEMS.map((item) => (
-            <Pressable key={item.label} onPress={() => router.push(item.route as any)} style={({ pressed }) => [styles.menuItem, { backgroundColor: colors.card, opacity: pressed ? 0.85 : 1 }]}>
+            <Pressable
+              key={item.label}
+              onPress={() => router.push(item.route as any)}
+              style={({ pressed }) => [
+                styles.menuItem,
+                { backgroundColor: colors.card, opacity: pressed ? 0.85 : 1 },
+              ]}
+            >
               <View style={[styles.menuIcon, { backgroundColor: colors.primary + "15" }]}>
                 <Feather name={item.icon as any} size={22} color={colors.primary} />
               </View>
               <Text style={[styles.menuLabel, { color: colors.foreground }]}>{item.label}</Text>
-              <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+              {item.badge > 0 && (
+                <View style={[styles.menuBadge, { backgroundColor: item.icon === "message-circle" ? colors.primary : colors.destructive }]}>
+                  <Text style={styles.menuBadgeText}>{item.badge}</Text>
+                </View>
+              )}
+              <Feather name="chevron-right" size={16} color={colors.mutedForeground} style={{ marginLeft: "auto" as any }} />
             </Pressable>
           ))}
         </View>
@@ -145,7 +186,13 @@ export default function AdminDashboard() {
 }
 
 const styles = StyleSheet.create({
-  header: { padding: 20, paddingBottom: 24, flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end" },
+  header: {
+    padding: 20,
+    paddingBottom: 24,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+  },
   headerTitle: { color: "#fff", fontSize: 24, fontFamily: "Inter_700Bold" },
   headerSub: { color: "rgba(255,255,255,0.7)", fontSize: 14, fontFamily: "Inter_400Regular" },
   headerActions: { flexDirection: "row", gap: 10 },
@@ -170,4 +217,13 @@ const styles = StyleSheet.create({
   menuItem: { flexDirection: "row", alignItems: "center", gap: 14, padding: 16, borderRadius: 16 },
   menuIcon: { width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   menuLabel: { fontSize: 15, fontFamily: "Inter_500Medium", flex: 1 },
+  menuBadge: {
+    minWidth: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 6,
+  },
+  menuBadgeText: { color: "#fff", fontSize: 11, fontFamily: "Inter_700Bold" },
 });

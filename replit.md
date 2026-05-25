@@ -1,45 +1,95 @@
-# [Project name]
+# OrderControl
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+App mobile de pedidos para restaurante com painel administrativo. Clientes fazem pedidos, acompanham status e conversam com o restaurante. Admins gerenciam pedidos, produtos, promoções e configuram o restaurante.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- `pnpm --filter @workspace/ordercontrol run dev` — rodar o app Expo (porta 23815)
+- `pnpm run typecheck` — typecheck completo
+- Para gerar APK: `eas build -p android` (requer EAS CLI e conta Expo)
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Mobile: Expo 54 + Expo Router 6 (file-based routing)
+- State: React Context + AsyncStorage (100% offline, sem backend ainda)
+- UI: React Native + @expo/vector-icons + expo-linear-gradient
+- Imagens: expo-image-picker
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+```
+artifacts/ordercontrol/
+├── app/
+│   ├── (tabs)/          # 6 abas: index, menu, cart, orders, chat, profile
+│   ├── admin/           # Painel admin: index, orders, products, categories, promotions, reports, settings, chat
+│   ├── auth/            # login, register
+│   ├── product/[id]     # Detalhe do produto
+│   ├── order/[id]       # Acompanhamento do pedido
+│   ├── checkout.tsx     # Finalizar pedido
+│   └── chat.tsx         # Rota alternativa de chat
+├── context/
+│   ├── AuthContext.tsx        # Autenticação (admin/cliente)
+│   ├── CartContext.tsx        # Carrinho de compras
+│   ├── OrderContext.tsx       # Pedidos
+│   ├── ChatContext.tsx        # Chat admin ↔ cliente (AsyncStorage)
+│   ├── RestaurantContext.tsx  # Config dinâmica do restaurante (AsyncStorage)
+│   └── LangContext.tsx        # 4 idiomas: pt-BR, en, es, fr
+├── components/          # Button, ProductCard, OrderStatusBadge, WhatsAppButton, ErrorBoundary
+├── constants/colors.ts  # Paleta: primary #DC2626
+├── data/restaurant.ts   # Dados padrão do restaurante + categorias + produtos
+└── hooks/useColors.ts   # Hook de cores
+```
+
+## Funcionalidades
+
+**Cliente:**
+- Tela inicial com destaques, categorias e listagem de produtos
+- Cardápio com busca e filtro por categoria
+- Carrinho com controle de quantidade
+- Checkout com entrega/retirada, forma de pagamento
+- Histórico de pedidos com acompanhamento em tempo real
+- Chat com suporte do restaurante
+- Perfil editável, troca de idioma (PT/EN/ES/FR), logout
+
+**Admin:**
+- Dashboard com métricas (pedidos, receita, ativos)
+- Gerenciar pedidos (aceitar, preparar, enviar, entregar)
+- Chat com clientes (vê todas as conversas)
+- Produtos, categorias, promoções
+- Configurações do restaurante: nome, slogan, contatos, redes sociais, taxa de entrega, horário de abertura, **upload de logo e foto de capa**
+- Relatórios
+
+## Credenciais de teste
+
+- Admin: `admin@ordercontrol.com` / `admin123`
+- Cliente: qualquer e-mail + qualquer senha
+
+## Preparação para APK / Neon + Railway
+
+Para conectar backend real:
+1. Criar banco PostgreSQL no **Neon** → obter `DATABASE_URL`
+2. Deploy da API Express no **Railway** → obter URL base da API
+3. Substituir os Contexts (AuthContext, OrderContext) por chamadas à API real
+4. Para APK: instalar EAS CLI → `eas build -p android`
+5. Configurar `app.json` com `android.package` (ex: `com.seurestaurante.ordercontrol`)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
-
-## Product
-
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Toda a persistência usa AsyncStorage (offline-first) — fácil migrar para API real
+- Expo Router com file-based routing — sem configuração manual de navegação
+- RestaurantContext permite customizar o restaurante sem mudar código
+- ChatContext isola a lógica de chat — pode ser substituída por WebSocket/Firebase
+- Traduções cobertas em 100% das telas nas 4 línguas via LangContext
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- App em português por padrão, suporte a EN, ES, FR
+- Cor primária: vermelho #DC2626
+- Estilo: moderno, cards, ícones Feather
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Upload de imagem (logo/capa) só funciona no app nativo (não no web preview)
+- Para gerar APK real, precisa de conta Expo + EAS + `app.json` configurado
+- O app usa `--localhost` no Metro, então o QR code só funciona na mesma rede

@@ -6,8 +6,10 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useLang } from "@/context/LangContext";
 import { useCart } from "@/context/CartContext";
+import { useChat } from "@/context/ChatContext";
+import { useAuth } from "@/context/AuthContext";
 
-function CartTabIcon({ color, focused }: { color: string; focused: boolean }) {
+function CartTabIcon({ color }: { color: string }) {
   const { itemCount } = useCart();
   return (
     <View>
@@ -15,6 +17,21 @@ function CartTabIcon({ color, focused }: { color: string; focused: boolean }) {
       {itemCount > 0 && (
         <View style={styles.badge}>
           <Text style={styles.badgeText}>{itemCount > 9 ? "9+" : itemCount}</Text>
+        </View>
+      )}
+    </View>
+  );
+}
+
+function ChatTabIcon({ color }: { color: string }) {
+  const { totalUnread } = useChat();
+  const { user } = useAuth();
+  return (
+    <View>
+      <Feather name="message-circle" size={24} color={color} />
+      {user && totalUnread > 0 && (
+        <View style={styles.badge}>
+          <Text style={styles.badgeText}>{totalUnread > 9 ? "9+" : totalUnread}</Text>
         </View>
       )}
     </View>
@@ -36,13 +53,13 @@ export default function TabLayout() {
           backgroundColor: colors.background,
           borderTopColor: colors.border,
           borderTopWidth: 1,
-          height: (Platform.OS === "web" ? 60 : insets.bottom + 60),
+          height: Platform.OS === "web" ? 60 : insets.bottom + 60,
           paddingBottom: Platform.OS === "web" ? 8 : insets.bottom,
           paddingTop: 8,
           elevation: 0,
         },
         tabBarLabelStyle: {
-          fontSize: 11,
+          fontSize: 10,
           fontFamily: "Inter_500Medium",
           marginTop: 2,
         },
@@ -52,35 +69,42 @@ export default function TabLayout() {
         name="index"
         options={{
           title: t("home"),
-          tabBarIcon: ({ color }) => <Feather name="home" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="home" size={23} color={color} />,
         }}
       />
       <Tabs.Screen
         name="menu"
         options={{
           title: t("menu"),
-          tabBarIcon: ({ color }) => <Feather name="grid" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="grid" size={23} color={color} />,
         }}
       />
       <Tabs.Screen
         name="cart"
         options={{
           title: t("cart"),
-          tabBarIcon: ({ color, focused }) => <CartTabIcon color={color} focused={focused} />,
+          tabBarIcon: ({ color }) => <CartTabIcon color={color} />,
         }}
       />
       <Tabs.Screen
         name="orders"
         options={{
           title: t("orders"),
-          tabBarIcon: ({ color }) => <Feather name="package" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="package" size={23} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: t("chat"),
+          tabBarIcon: ({ color }) => <ChatTabIcon color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: t("profile"),
-          tabBarIcon: ({ color }) => <Feather name="user" size={24} color={color} />,
+          tabBarIcon: ({ color }) => <Feather name="user" size={23} color={color} />,
         }}
       />
     </Tabs>
