@@ -66,6 +66,7 @@ export default function RootLayout() {
                           <Stack.Screen name="admin/reports" options={{ headerShown: false }} />
                           <Stack.Screen name="admin/settings" options={{ headerShown: false }} />
                           <Stack.Screen name="admin/chat" options={{ headerShown: false }} />
+                          <Stack.Screen name="privacy-policy" options={{ headerShown: false }} />
                         </Stack>
                       </ChatProvider>
                     </CartProvider>

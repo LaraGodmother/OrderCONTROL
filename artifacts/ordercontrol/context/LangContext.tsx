@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-export type Language = "pt-BR" | "en" | "es" | "fr";
+export type Language = "pt-BR" | "pt-PT" | "en" | "es" | "fr";
 
 const translations: Record<Language, Record<string, string>> = {
   "pt-BR": {
@@ -162,6 +162,9 @@ const translations: Record<Language, Record<string, string>> = {
     processing: "Processando...",
     confirm_order: "Confirmar Pedido",
     info: "Informação",
+    all: "Todos",
+    no_products_found: "Nenhum produto encontrado",
+    try_other_category: "Tente outra categoria ou busca",
   },
   "en": {
     app_name: "OrderControl",
@@ -321,6 +324,165 @@ const translations: Record<Language, Record<string, string>> = {
     processing: "Processing...",
     confirm_order: "Confirm Order",
     info: "Information",
+  },
+  "pt-PT": {
+    app_name: "OrderControl",
+    home: "Início",
+    menu: "Menu",
+    cart: "Carrinho",
+    orders: "Encomendas",
+    profile: "Perfil",
+    admin: "Admin",
+    dashboard: "Painel",
+    settings: "Definições",
+    save: "Guardar",
+    cancel: "Cancelar",
+    confirm: "Confirmar",
+    delete: "Eliminar",
+    edit: "Editar",
+    add: "Adicionar",
+    search: "Pesquisar",
+    loading: "A carregar...",
+    error: "Erro",
+    success: "Sucesso",
+    back: "Voltar",
+    logout: "Sair",
+    login: "Entrar",
+    register: "Registar",
+    email: "E-mail",
+    password: "Palavra-passe",
+    name: "Nome completo",
+    phone: "Telefone",
+    address: "Morada",
+    city: "Cidade",
+    zip_code: "Código Postal",
+    admin_login: "Acesso Administrativo",
+    customer_login: "Acesso do Cliente",
+    dont_have_account: "Não tem conta?",
+    already_have_account: "Já tem conta?",
+    forgot_password: "Esqueceu a palavra-passe?",
+    welcome: "Bem-vindo,",
+    featured: "Destaques",
+    categories: "Categorias",
+    see_menu: "Ver Menu",
+    contact_whatsapp: "Falar no WhatsApp",
+    open_now: "Aberto agora",
+    closed: "Fechado",
+    opening_hours: "Horário de funcionamento",
+    add_to_cart: "Adicionar ao carrinho",
+    description: "Descrição",
+    price: "Preço",
+    extras: "Extras",
+    quantity: "Quantidade",
+    empty_cart: "Carrinho vazio",
+    empty_cart_desc: "Adicione itens do menu para começar a sua encomenda",
+    subtotal: "Subtotal",
+    delivery_fee: "Taxa de entrega",
+    total: "Total",
+    checkout: "Finalizar Encomenda",
+    remove: "Remover",
+    delivery: "Entrega",
+    pickup: "Levantar",
+    payment_method: "Método de pagamento",
+    pix: "PIX",
+    cash: "Numerário",
+    credit_card: "Cartão de Crédito",
+    pay_on_delivery: "Pagar na Entrega",
+    neighborhood: "Bairro",
+    reference: "Ponto de referência",
+    place_order: "Fazer Encomenda",
+    order_confirmed: "Encomenda confirmada!",
+    order_number: "Número da encomenda",
+    estimated_time: "Tempo estimado",
+    minutes: "minutos",
+    order_received: "Encomenda recebida",
+    preparing: "A preparar",
+    ready: "Pronta",
+    out_for_delivery: "Em entrega",
+    delivered: "Entregue",
+    cancelled: "Cancelada",
+    track_order: "Seguir encomenda",
+    order_history: "Histórico de encomendas",
+    orders_today: "Encomendas hoje",
+    revenue_today: "Receita hoje",
+    active_orders: "Encomendas ativas",
+    monthly_revenue: "Receita mensal",
+    most_sold: "Mais vendidos",
+    new_order: "Nova encomenda",
+    accept: "Aceitar",
+    reject: "Rejeitar",
+    product_name: "Nome do produto",
+    category: "Categoria",
+    image: "Imagem",
+    available: "Disponível",
+    unavailable: "Indisponível",
+    add_product: "Adicionar produto",
+    edit_product: "Editar produto",
+    promotions: "Promoções",
+    discount: "Desconto",
+    original_price: "Preço original",
+    promo_price: "Preço promocional",
+    active: "Ativo",
+    inactive: "Inativo",
+    restaurant_name: "Nome do restaurante",
+    whatsapp: "WhatsApp",
+    logo: "Logo",
+    social_media: "Redes Sociais",
+    delivery_areas: "Zonas de Entrega",
+    min_order: "Encomenda mínima",
+    daily_report: "Relatório Diário",
+    monthly_report: "Relatório Mensal",
+    export_pdf: "Exportar PDF",
+    my_orders: "As Minhas Encomendas",
+    saved_addresses: "Moradas guardadas",
+    edit_profile: "Editar perfil",
+    language: "Idioma",
+    chat: "Chat",
+    chat_support: "Chat com Suporte",
+    customer_chats: "Conversas dos Clientes",
+    messages: "Mensagens",
+    send: "Enviar",
+    write_message: "Escreva uma mensagem...",
+    no_messages: "Nenhuma mensagem ainda",
+    start_conversation: "Inicie uma conversa com o restaurante!",
+    login_to_chat: "Inicie sessão para aceder ao suporte",
+    restaurant_online: "Online • Responde rapidamente",
+    restaurant_info: "Informações do Restaurante",
+    cover_photo: "Foto de Capa",
+    logo_photo: "Logo do Restaurante",
+    logo_photo_desc: "Toque para alterar o logo",
+    change_photo: "Alterar foto",
+    save_changes: "Guardar Alterações",
+    saving: "A guardar...",
+    changes_saved: "Definições guardadas com sucesso!",
+    tagline: "Slogan do restaurante",
+    phone_label: "Telefone",
+    social_links: "Redes Sociais",
+    manage_orders: "Gerir Encomendas",
+    management: "Gestão",
+    active_orders_section: "Encomendas Ativas",
+    see_all: "Ver todos",
+    ready_btn: "Pronta",
+    send_btn: "Enviar",
+    delivered_btn: "Entregue",
+    admin_panel: "Painel Admin",
+    hello: "Olá,",
+    view_store: "Ver Loja",
+    login_to_manage: "Inicie sessão para gerir o seu perfil",
+    register_link: "Registar",
+    admin_badge: "ADMINISTRADOR",
+    access_admin: "Aceder ao Painel Admin",
+    no_orders_yet: "Nenhuma encomenda ainda",
+    no_orders_desc: "As suas encomendas aparecerão aqui",
+    order_items: "Itens da Encomenda",
+    order_summary: "Resumo da Encomenda",
+    delivery_type: "Tipo de Entrega",
+    delivery_address_section: "Morada de Entrega",
+    prefer_whatsapp: "Prefere encomendar pelo WhatsApp?",
+    order_via_whatsapp: "Encomendar pelo WhatsApp",
+    processing: "A processar...",
+    confirm_order: "Confirmar Encomenda",
+    info: "Informação",
   },
   "es": {
     app_name: "OrderControl",
@@ -646,6 +808,7 @@ const LangContext = createContext<{
   language: Language;
   setLanguage: (l: Language) => void;
   t: (key: string) => string;
+  formatCurrency: (amount: number) => string;
 } | null>(null);
 
 export function LangProvider({ children }: { children: React.ReactNode }) {
@@ -666,8 +829,27 @@ export function LangProvider({ children }: { children: React.ReactNode }) {
     return translations[language][key] ?? translations["pt-BR"][key] ?? key;
   }
 
+  function formatCurrency(amount: number): string {
+    const fixed = amount.toFixed(2);
+    const commaFixed = fixed.replace(".", ",");
+    switch (language) {
+      case "pt-BR":
+        return `R$ ${commaFixed}`;
+      case "pt-PT":
+        return `${commaFixed} €`;
+      case "en":
+        return `$${fixed}`;
+      case "es":
+        return `$${commaFixed}`;
+      case "fr":
+        return `${commaFixed} €`;
+      default:
+        return `R$ ${commaFixed}`;
+    }
+  }
+
   return (
-    <LangContext.Provider value={{ language, setLanguage, t }}>
+    <LangContext.Provider value={{ language, setLanguage, t, formatCurrency }}>
       {children}
     </LangContext.Provider>
   );

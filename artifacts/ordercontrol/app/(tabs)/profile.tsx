@@ -18,6 +18,7 @@ import { useChat } from "@/context/ChatContext";
 
 const LANGUAGES: { key: Language; label: string; flag: string }[] = [
   { key: "pt-BR", label: "Português (BR)", flag: "🇧🇷" },
+  { key: "pt-PT", label: "Português (PT)", flag: "🇵🇹" },
   { key: "en", label: "English", flag: "🇺🇸" },
   { key: "es", label: "Español", flag: "🇪🇸" },
   { key: "fr", label: "Français", flag: "🇫🇷" },
@@ -226,6 +227,17 @@ export default function ProfileScreen() {
             </View>
           )}
           <Feather name="chevron-right" size={18} color={colors.mutedForeground} style={{ marginLeft: chatUnread > 0 ? 4 : ("auto" as any) }} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/privacy-policy")}
+          style={[styles.menuItem, { borderBottomColor: colors.border }]}
+        >
+          <View style={[styles.menuItemIcon, { backgroundColor: "#22A45D20" }]}>
+            <Feather name="shield" size={18} color="#22A45D" />
+          </View>
+          <Text style={[styles.menuItemText, { color: colors.foreground }]}>Política de Privacidade</Text>
+          <Feather name="chevron-right" size={18} color={colors.mutedForeground} style={{ marginLeft: "auto" as any }} />
         </Pressable>
 
         <Pressable
