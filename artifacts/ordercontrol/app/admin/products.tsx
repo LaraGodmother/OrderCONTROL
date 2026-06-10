@@ -32,7 +32,7 @@ export default function AdminProductsScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
-        <Text style={[styles.title, { color: colors.foreground }]}>Produtos</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>{t("products")}</Text>
         <Pressable onPress={() => Alert.alert("", "Adicionar produto disponível na versão completa")} style={[styles.addBtn, { backgroundColor: colors.primary }]}>
           <Feather name="plus" size={18} color="#fff" />
         </Pressable>

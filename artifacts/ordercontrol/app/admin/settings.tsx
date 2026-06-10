@@ -63,7 +63,23 @@ export default function AdminSettingsScreen() {
 
   async function pickImage(type: "logo" | "cover") {
     if (Platform.OS === "web") {
-      Alert.alert(t("info"), "Upload de imagem disponível apenas no aplicativo móvel.");
+      // Web: use native file input
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = (e: Event) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = (ev) => {
+            const uri = ev.target?.result as string;
+            if (type === "logo") setLogoUri(uri);
+            else setCoverUri(uri);
+          };
+          reader.readAsDataURL(file);
+        }
+      };
+      input.click();
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -107,8 +123,8 @@ export default function AdminSettingsScreen() {
     { label: t("phone_label"), value: phone, set: setPhone, icon: "phone", keyboard: "phone-pad" as const },
     { label: t("address"), value: address, set: setAddress, icon: "map-pin", keyboard: "default" as const },
     { label: t("city"), value: city, set: setCity, icon: "map", keyboard: "default" as const },
-    { label: `${t("delivery_fee")} (R$)`, value: deliveryFee, set: setDeliveryFee, icon: "truck", keyboard: "decimal-pad" as const },
-    { label: `${t("min_order")} (R$)`, value: minOrder, set: setMinOrder, icon: "shopping-bag", keyboard: "decimal-pad" as const },
+    { label: `${t("delivery_fee")}`, value: deliveryFee, set: setDeliveryFee, icon: "truck", keyboard: "decimal-pad" as const },
+    { label: `${t("min_order")}`, value: minOrder, set: setMinOrder, icon: "shopping-bag", keyboard: "decimal-pad" as const },
     { label: `${t("estimated_time")} (min)`, value: estimatedTime, set: setEstimatedTime, icon: "clock", keyboard: "number-pad" as const },
   ];
 
@@ -174,7 +190,7 @@ export default function AdminSettingsScreen() {
                 <Feather name="power" size={20} color={isOpen ? colors.success : colors.destructive} />
               </View>
               <View>
-                <Text style={[styles.toggleLabel, { color: colors.foreground }]}>{t("restaurant_name")}</Text>
+                <Text style={[styles.toggleLabel, { color: colors.foreground }]}>{name || t("restaurant_name")}</Text>
                 <Text style={[styles.toggleSub, { color: isOpen ? colors.success : colors.destructive }]}>
                   {isOpen ? t("open_now") : t("closed")}
                 </Text>

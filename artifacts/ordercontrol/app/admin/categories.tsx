@@ -28,7 +28,7 @@ export default function AdminCategoriesScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
-        <Text style={[styles.title, { color: colors.foreground }]}>Categorias</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>{t("categories")}</Text>
         <Pressable onPress={() => Alert.alert("", "Adicionar categoria disponível na versão completa")} style={[styles.addBtn, { backgroundColor: colors.primary }]}>
           <Feather name="plus" size={18} color="#fff" />
         </Pressable>
@@ -47,7 +47,7 @@ export default function AdminCategoriesScreen() {
               </View>
               <View style={styles.catInfo}>
                 <Text style={[styles.catName, { color: colors.foreground }]}>{item.name}</Text>
-                <Text style={[styles.catCount, { color: colors.mutedForeground }]}>{count} produtos</Text>
+                <Text style={[styles.catCount, { color: colors.mutedForeground }]}>{t("n_products").replace("{n}", count.toString())}</Text>
               </View>
               <View style={styles.catActions}>
                 <Pressable onPress={() => Alert.alert("", "Edição disponível na versão completa")} style={styles.actionBtn}>

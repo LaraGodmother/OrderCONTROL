@@ -208,6 +208,8 @@ const translations: Record<Language, Record<string, string>> = {
     delivering_filter: "Entrega",
     remove: "Remover",
     export_btn: "Exportar",
+    products: "Produtos",
+    n_products: "{n} produtos",
   },
   "en": {
     app_name: "OrderControl",
@@ -410,6 +412,8 @@ const translations: Record<Language, Record<string, string>> = {
     delivering_filter: "Delivery",
     remove: "Remove",
     export_btn: "Export",
+    products: "Products",
+    n_products: "{n} products",
   },
   "pt-PT": {
     app_name: "OrderControl",
@@ -611,6 +615,8 @@ const translations: Record<Language, Record<string, string>> = {
     delivering_filter: "Entrega",
     remove: "Remover",
     export_btn: "Exportar",
+    products: "Produtos",
+    n_products: "{n} produtos",
   },
   "es": {
     app_name: "OrderControl",
@@ -813,6 +819,8 @@ const translations: Record<Language, Record<string, string>> = {
     delivering_filter: "Entrega",
     remove: "Eliminar",
     export_btn: "Exportar",
+    products: "Productos",
+    n_products: "{n} productos",
   },
   "fr": {
     app_name: "OrderControl",
@@ -1015,6 +1023,8 @@ const translations: Record<Language, Record<string, string>> = {
     delivering_filter: "Livraison",
     remove: "Supprimer",
     export_btn: "Exporter",
+    products: "Produits",
+    n_products: "{n} produits",
   },
 };
 

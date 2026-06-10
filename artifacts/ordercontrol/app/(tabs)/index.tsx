@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -13,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useLang, Language } from "@/context/LangContext";
 import { RESTAURANT, PRODUCTS, CATEGORIES } from "@/data/restaurant";
+import { useRestaurant } from "@/context/RestaurantContext";
 import { ProductCard } from "@/components/ProductCard";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 
@@ -28,6 +30,7 @@ export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { t, language, setLanguage, formatCurrency } = useLang();
+  const { restaurant } = useRestaurant();
   const router = useRouter();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -81,24 +84,34 @@ export default function HomeScreen() {
       >
         {/* Hero Header */}
         <View style={[styles.hero, { backgroundColor: colors.secondary }]}>
-          <View style={styles.heroRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.heroTitle}>{RESTAURANT.name}</Text>
-              <Text style={styles.heroTagline}>{RESTAURANT.tagline}</Text>
+          {restaurant.coverUri ? (
+            <Image source={{ uri: restaurant.coverUri }} style={styles.coverBg} blurRadius={0} />
+          ) : null}
+          <View style={[styles.heroOverlay, restaurant.coverUri ? styles.heroOverlayDark : null]}>
+            <View style={styles.heroRow}>
+              <View style={{ flex: 1, flexDirection: "row", alignItems: "center", gap: 12 }}>
+                {restaurant.logoUri ? (
+                  <Image source={{ uri: restaurant.logoUri }} style={styles.logoImg} />
+                ) : null}
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.heroTitle}>{restaurant.name}</Text>
+                  <Text style={styles.heroTagline}>{restaurant.tagline}</Text>
+                </View>
+              </View>
+              <Pressable onPress={() => router.push("/notifications")} style={styles.notifBtn}>
+                <Feather name="bell" size={22} color="#fff" />
+              </Pressable>
             </View>
-            <Pressable onPress={() => router.push("/notifications")} style={styles.notifBtn}>
-              <Feather name="bell" size={22} color="#fff" />
-            </Pressable>
-          </View>
-          <View style={styles.statusRow}>
-            <View style={[styles.statusDot, { backgroundColor: RESTAURANT.isOpen ? "#4ADE80" : "#F87171" }]} />
-            <Text style={styles.statusText}>{RESTAURANT.isOpen ? t("open_now") : t("closed")}</Text>
-            <Text style={styles.statusSeparator}>·</Text>
-            <Feather name="clock" size={13} color="rgba(255,255,255,0.7)" />
-            <Text style={styles.statusText}>{RESTAURANT.estimatedTime} {t("minutes")}</Text>
-            <Text style={styles.statusSeparator}>·</Text>
-            <Feather name="map-pin" size={13} color="rgba(255,255,255,0.7)" />
-            <Text style={styles.statusText}>{formatCurrency(RESTAURANT.deliveryFee)} {t("delivery_fee")}</Text>
+            <View style={styles.statusRow}>
+              <View style={[styles.statusDot, { backgroundColor: restaurant.isOpen ? "#4ADE80" : "#F87171" }]} />
+              <Text style={styles.statusText}>{restaurant.isOpen ? t("open_now") : t("closed")}</Text>
+              <Text style={styles.statusSeparator}>·</Text>
+              <Feather name="clock" size={13} color="rgba(255,255,255,0.7)" />
+              <Text style={styles.statusText}>{restaurant.estimatedTime} {t("minutes")}</Text>
+              <Text style={styles.statusSeparator}>·</Text>
+              <Feather name="map-pin" size={13} color="rgba(255,255,255,0.7)" />
+              <Text style={styles.statusText}>{formatCurrency(restaurant.deliveryFee)} {t("delivery_fee")}</Text>
+            </View>
           </View>
         </View>
 
@@ -234,10 +247,14 @@ const styles = StyleSheet.create({
   },
   langFlag: { fontSize: 16 },
   langLabel: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
-  hero: { padding: 16, paddingBottom: 20, gap: 12 },
+  hero: { overflow: "hidden" },
+  coverBg: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, width: "100%", height: "100%" },
+  heroOverlay: { padding: 16, paddingBottom: 20, gap: 12 },
+  heroOverlayDark: { backgroundColor: "rgba(0,0,0,0.45)" },
   heroRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   heroTitle: { color: "#fff", fontSize: 22, fontFamily: "Inter_700Bold" },
   heroTagline: { color: "rgba(255,255,255,0.7)", fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
+  logoImg: { width: 48, height: 48, borderRadius: 12, borderWidth: 2, borderColor: "rgba(255,255,255,0.3)" },
   notifBtn: { padding: 8, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.15)" },
   statusRow: { flexDirection: "row", alignItems: "center", gap: 6, flexWrap: "wrap" },
   statusDot: { width: 8, height: 8, borderRadius: 4 },
