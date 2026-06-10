@@ -11,26 +11,35 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
-import { useLang } from "@/context/LangContext";
+import { useLang, Language } from "@/context/LangContext";
 import { useOrders } from "@/context/OrderContext";
 import { useAuth } from "@/context/AuthContext";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 import { Button } from "@/components/Button";
 
+const LOCALE_MAP: Record<Language, string> = {
+  "pt-BR": "pt-BR",
+  "pt-PT": "pt-PT",
+  "en": "en-US",
+  "es": "es-ES",
+  "fr": "fr-FR",
+};
+
 export default function OrdersScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t } = useLang();
+  const { t, formatCurrency, language } = useLang();
   const router = useRouter();
   const { user } = useAuth();
   const { getCustomerOrders } = useOrders();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
+  const dateLocale = LOCALE_MAP[language] ?? "pt-BR";
 
   if (!user) {
     return (
       <View style={[styles.loginPrompt, { backgroundColor: colors.background, paddingTop: topPad }]}>
         <Feather name="package" size={56} color={colors.mutedForeground} />
-        <Text style={[styles.promptTitle, { color: colors.foreground }]}>Faça login para ver seus pedidos</Text>
+        <Text style={[styles.promptTitle, { color: colors.foreground }]}>{t("login_to_view_orders")}</Text>
         <Button title={t("login")} onPress={() => router.push("/auth/login")} style={{ marginTop: 8 }} />
       </View>
     );
@@ -48,8 +57,8 @@ export default function OrdersScreen() {
         {orders.length === 0 ? (
           <View style={styles.empty}>
             <Feather name="package" size={56} color={colors.mutedForeground} />
-            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>Nenhum pedido ainda</Text>
-            <Text style={[styles.emptyDesc, { color: colors.mutedForeground }]}>Faça seu primeiro pedido!</Text>
+            <Text style={[styles.emptyTitle, { color: colors.foreground }]}>{t("no_orders_yet")}</Text>
+            <Text style={[styles.emptyDesc, { color: colors.mutedForeground }]}>{t("make_first_order")}</Text>
             <Button title={t("see_menu")} onPress={() => router.push("/(tabs)/menu")} style={{ marginTop: 8 }} />
           </View>
         ) : (
@@ -68,9 +77,9 @@ export default function OrdersScreen() {
               </Text>
               <View style={styles.orderFooter}>
                 <Text style={[styles.orderDate, { color: colors.mutedForeground }]}>
-                  {new Date(order.createdAt).toLocaleDateString("pt-BR", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  {new Date(order.createdAt).toLocaleDateString(dateLocale, { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
                 </Text>
-                <Text style={[styles.orderTotal, { color: colors.primary }]}>R$ {order.total.toFixed(2).replace(".", ",")}</Text>
+                <Text style={[styles.orderTotal, { color: colors.primary }]}>{formatCurrency(order.total)}</Text>
               </View>
             </Pressable>
           ))

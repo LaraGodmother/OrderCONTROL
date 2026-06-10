@@ -20,7 +20,7 @@ import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 export default function AdminDashboard() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t } = useLang();
+  const { t, formatCurrency } = useLang();
   const { getAllOrders, updateOrderStatus } = useOrders();
   const { user, logout } = useAuth();
   const { totalUnread } = useChat();
@@ -36,9 +36,9 @@ export default function AdminDashboard() {
 
   const STATS = [
     { label: t("orders_today"), value: todayOrders.length.toString(), icon: "shopping-bag", color: "#2563EB" },
-    { label: t("revenue_today"), value: `R$ ${todayRevenue.toFixed(2).replace(".", ",")}`, icon: "dollar-sign", color: "#16A34A" },
+    { label: t("revenue_today"), value: formatCurrency(todayRevenue), icon: "dollar-sign", color: "#16A34A" },
     { label: t("active_orders"), value: activeOrders.length.toString(), icon: "activity", color: "#F59E0B" },
-    { label: t("monthly_revenue"), value: `R$ ${monthRevenue.toFixed(2).replace(".", ",")}`, icon: "trending-up", color: colors.primary },
+    { label: t("monthly_revenue"), value: formatCurrency(monthRevenue), icon: "trending-up", color: colors.primary },
   ];
 
   const MENU_ITEMS = [
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
                 </Text>
                 <View style={styles.orderActions}>
                   <Text style={[styles.orderTotal, { color: colors.primary }]}>
-                    R$ {order.total.toFixed(2).replace(".", ",")}
+                    {formatCurrency(order.total)}
                   </Text>
                   {order.status === "received" && (
                     <Pressable

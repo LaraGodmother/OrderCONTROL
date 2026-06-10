@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { useLang } from "@/context/LangContext";
 import { useCart } from "@/context/CartContext";
 import { Product } from "@/data/restaurant";
 
@@ -14,6 +15,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, compact = false }: ProductCardProps) {
   const colors = useColors();
+  const { formatCurrency } = useLang();
   const router = useRouter();
   const { addItem } = useCart();
 
@@ -60,11 +62,11 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           <View style={styles.priceRow}>
             {product.isPromo && product.promoPrice && (
               <Text style={[styles.originalPrice, { color: colors.mutedForeground }]}>
-                R$ {product.price.toFixed(2).replace(".", ",")}
+                {formatCurrency(product.price)}
               </Text>
             )}
             <Text style={[styles.price, { color: colors.primary }]}>
-              R$ {displayPrice.toFixed(2).replace(".", ",")}
+              {formatCurrency(displayPrice)}
             </Text>
           </View>
         </View>
@@ -107,11 +109,11 @@ export function ProductCard({ product, compact = false }: ProductCardProps) {
           <View>
             {product.isPromo && product.promoPrice && (
               <Text style={[styles.originalPrice, { color: colors.mutedForeground }]}>
-                R$ {product.price.toFixed(2).replace(".", ",")}
+                {formatCurrency(product.price)}
               </Text>
             )}
             <Text style={[styles.price, { color: colors.primary }]}>
-              R$ {displayPrice.toFixed(2).replace(".", ",")}
+              {formatCurrency(displayPrice)}
             </Text>
           </View>
           <Pressable

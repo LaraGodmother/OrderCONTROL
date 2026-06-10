@@ -11,11 +11,12 @@ import { useAuth } from "@/context/AuthContext";
 
 function CartTabIcon({ color }: { color: string }) {
   const { itemCount } = useCart();
+  const colors = useColors();
   return (
     <View>
       <Feather name="shopping-cart" size={24} color={color} />
       {itemCount > 0 && (
-        <View style={styles.badge}>
+        <View style={[styles.badge, { backgroundColor: colors.primary }]}>
           <Text style={styles.badgeText}>{itemCount > 9 ? "9+" : itemCount}</Text>
         </View>
       )}
@@ -26,11 +27,12 @@ function CartTabIcon({ color }: { color: string }) {
 function ChatTabIcon({ color }: { color: string }) {
   const { totalUnread } = useChat();
   const { user } = useAuth();
+  const colors = useColors();
   return (
     <View>
       <Feather name="message-circle" size={24} color={color} />
       {user && totalUnread > 0 && (
-        <View style={styles.badge}>
+        <View style={[styles.badge, { backgroundColor: colors.primary }]}>
           <Text style={styles.badgeText}>{totalUnread > 9 ? "9+" : totalUnread}</Text>
         </View>
       )}
@@ -116,7 +118,6 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: -4,
     right: -8,
-    backgroundColor: "#DC2626",
     borderRadius: 10,
     minWidth: 18,
     height: 18,

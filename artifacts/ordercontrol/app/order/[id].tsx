@@ -18,15 +18,6 @@ import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 const STATUS_STEPS: OrderStatus[] = ["received", "preparing", "ready", "delivering", "delivered"];
 
-const STEP_LABELS: Record<OrderStatus, string> = {
-  received: "Pedido recebido",
-  preparing: "Preparando",
-  ready: "Pronto para entrega",
-  delivering: "Saiu para entrega",
-  delivered: "Entregue",
-  cancelled: "Cancelado",
-};
-
 const STEP_ICONS: Record<OrderStatus, string> = {
   received: "check-circle",
   preparing: "tool",
@@ -39,12 +30,21 @@ const STEP_ICONS: Record<OrderStatus, string> = {
 export default function OrderDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t } = useLang();
+  const { t, formatCurrency } = useLang();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { orders } = useOrders();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
+
+  const STEP_LABELS: Record<OrderStatus, string> = {
+    received: t("status_received"),
+    preparing: t("status_preparing"),
+    ready: t("status_ready"),
+    delivering: t("status_delivering"),
+    delivered: t("status_delivered"),
+    cancelled: t("status_cancelled"),
+  };
 
   const order = orders.find((o) => o.id === id);
 
@@ -52,15 +52,20 @@ export default function OrderDetailScreen() {
     return (
       <View style={[styles.notFound, { backgroundColor: colors.background }]}>
         <Feather name="alert-circle" size={48} color={colors.mutedForeground} />
-        <Text style={[styles.notFoundText, { color: colors.foreground }]}>Pedido não encontrado</Text>
+        <Text style={[styles.notFoundText, { color: colors.foreground }]}>{t("order_not_found")}</Text>
         <Pressable onPress={() => router.back()} style={[styles.backBtnAlt, { backgroundColor: colors.primary }]}>
-          <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold" }}>Voltar</Text>
+          <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold" }}>{t("back")}</Text>
         </Pressable>
       </View>
     );
   }
 
   const currentStepIndex = order.status === "cancelled" ? -1 : STATUS_STEPS.indexOf(order.status);
+
+  function getPaymentLabel(method: string): string {
+    if (method === "pix") return t("pix");
+    return t(method);
+  }
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
@@ -91,7 +96,7 @@ export default function OrderDetailScreen() {
         {/* Tracking */}
         {order.status !== "cancelled" && (
           <View style={[styles.trackingCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>Acompanhar pedido</Text>
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t("track_order")}</Text>
             {STATUS_STEPS.map((step, index) => {
               const done = index <= currentStepIndex;
               const active = index === currentStepIndex;
@@ -116,33 +121,33 @@ export default function OrderDetailScreen() {
 
         {/* Items */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.foreground }]}>Itens do pedido</Text>
+          <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t("order_items")}</Text>
           {order.items.map((item, i) => (
             <View key={i} style={styles.itemRow}>
               <Text style={[styles.itemQty, { color: colors.primary }]}>{item.quantity}x</Text>
               <Text style={[styles.itemName, { color: colors.foreground }]} numberOfLines={1}>{item.name}</Text>
-              <Text style={[styles.itemPrice, { color: colors.foreground }]}>R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}</Text>
+              <Text style={[styles.itemPrice, { color: colors.foreground }]}>{formatCurrency(item.price * item.quantity)}</Text>
             </View>
           ))}
           <View style={[styles.divider, { borderTopColor: colors.border }]} />
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>{t("subtotal")}</Text>
-            <Text style={[styles.summaryValue, { color: colors.foreground }]}>R$ {order.subtotal.toFixed(2).replace(".", ",")}</Text>
+            <Text style={[styles.summaryValue, { color: colors.foreground }]}>{formatCurrency(order.subtotal)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>{t("delivery_fee")}</Text>
-            <Text style={[styles.summaryValue, { color: colors.foreground }]}>{order.deliveryFee === 0 ? "Grátis" : `R$ ${order.deliveryFee.toFixed(2).replace(".", ",")}`}</Text>
+            <Text style={[styles.summaryValue, { color: colors.foreground }]}>{order.deliveryFee === 0 ? t("free") : formatCurrency(order.deliveryFee)}</Text>
           </View>
           <View style={[styles.summaryRow, { marginTop: 6 }]}>
             <Text style={[styles.totalLabel, { color: colors.foreground }]}>{t("total")}</Text>
-            <Text style={[styles.totalValue, { color: colors.primary }]}>R$ {order.total.toFixed(2).replace(".", ",")}</Text>
+            <Text style={[styles.totalValue, { color: colors.primary }]}>{formatCurrency(order.total)}</Text>
           </View>
         </View>
 
         {/* Delivery info */}
         {order.deliveryType === "delivery" && order.address && (
           <View style={[styles.card, { backgroundColor: colors.card }]}>
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>Endereço de entrega</Text>
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t("delivery_address_section")}</Text>
             <View style={styles.infoRow}>
               <Feather name="map-pin" size={16} color={colors.mutedForeground} />
               <Text style={[styles.infoText, { color: colors.foreground }]}>{order.address}{order.neighborhood ? `, ${order.neighborhood}` : ""}</Text>
@@ -161,16 +166,14 @@ export default function OrderDetailScreen() {
           <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t("payment_method")}</Text>
           <View style={styles.infoRow}>
             <Feather name="credit-card" size={16} color={colors.mutedForeground} />
-            <Text style={[styles.infoText, { color: colors.foreground }]}>
-              {order.paymentMethod === "pix" ? "PIX" : order.paymentMethod === "cash" ? "Dinheiro" : order.paymentMethod === "credit_card" ? "Cartão de Crédito" : "Pagar na Entrega"}
-            </Text>
+            <Text style={[styles.infoText, { color: colors.foreground }]}>{getPaymentLabel(order.paymentMethod)}</Text>
           </View>
         </View>
 
         {/* WhatsApp help */}
         <View style={styles.whatsapp}>
-          <Text style={[styles.whatsappLabel, { color: colors.mutedForeground }]}>Problemas com seu pedido?</Text>
-          <WhatsAppButton message={`Olá! Tenho uma dúvida sobre o pedido ${order.orderNumber}.`} />
+          <Text style={[styles.whatsappLabel, { color: colors.mutedForeground }]}>{t("order_problem")}</Text>
+          <WhatsAppButton message={`${t("whatsapp_order_inquiry")} ${order.orderNumber}.`} />
         </View>
       </ScrollView>
     </View>

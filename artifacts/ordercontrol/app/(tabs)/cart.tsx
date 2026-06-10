@@ -20,7 +20,7 @@ import { Button } from "@/components/Button";
 export default function CartScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t } = useLang();
+  const { t, formatCurrency } = useLang();
   const { items, removeItem, updateQuantity, total, itemCount } = useCart();
   const router = useRouter();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -44,7 +44,9 @@ export default function CartScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPad + 10, borderBottomColor: colors.border }]}>
         <Text style={[styles.title, { color: colors.foreground }]}>{t("cart")}</Text>
-        <Text style={[styles.count, { color: colors.mutedForeground }]}>{itemCount} {itemCount === 1 ? "item" : "itens"}</Text>
+        <Text style={[styles.count, { color: colors.mutedForeground }]}>
+          {itemCount} {itemCount === 1 ? t("item_singular") : t("items_plural")}
+        </Text>
       </View>
 
       <FlatList
@@ -58,7 +60,7 @@ export default function CartScreen() {
               {item.extras && item.extras.length > 0 && (
                 <Text style={[styles.itemExtras, { color: colors.mutedForeground }]}>+ {item.extras.join(", ")}</Text>
               )}
-              <Text style={[styles.itemPrice, { color: colors.primary }]}>R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}</Text>
+              <Text style={[styles.itemPrice, { color: colors.primary }]}>{formatCurrency(item.price * item.quantity)}</Text>
             </View>
             <View style={styles.qtyRow}>
               <Pressable onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light); updateQuantity(item.id, item.quantity - 1); }} style={[styles.qtyBtn, { backgroundColor: colors.background, borderColor: colors.border }]}>
@@ -76,18 +78,18 @@ export default function CartScreen() {
         )}
         ListFooterComponent={
           <View style={[styles.summaryCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.summaryTitle, { color: colors.foreground }]}>Resumo</Text>
+            <Text style={[styles.summaryTitle, { color: colors.foreground }]}>{t("summary")}</Text>
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>{t("subtotal")}</Text>
-              <Text style={[styles.summaryValue, { color: colors.foreground }]}>R$ {total.toFixed(2).replace(".", ",")}</Text>
+              <Text style={[styles.summaryValue, { color: colors.foreground }]}>{formatCurrency(total)}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>{t("delivery_fee")}</Text>
-              <Text style={[styles.summaryValue, { color: colors.foreground }]}>R$ {deliveryFee.toFixed(2).replace(".", ",")}</Text>
+              <Text style={[styles.summaryValue, { color: colors.foreground }]}>{formatCurrency(deliveryFee)}</Text>
             </View>
             <View style={[styles.summaryRow, styles.totalRow, { borderTopColor: colors.border }]}>
               <Text style={[styles.totalLabel, { color: colors.foreground }]}>{t("total")}</Text>
-              <Text style={[styles.totalValue, { color: colors.primary }]}>R$ {grandTotal.toFixed(2).replace(".", ",")}</Text>
+              <Text style={[styles.totalValue, { color: colors.primary }]}>{formatCurrency(grandTotal)}</Text>
             </View>
           </View>
         }
@@ -96,7 +98,7 @@ export default function CartScreen() {
       <View style={[styles.footer, { borderTopColor: colors.border, paddingBottom: bottomPad + 16, backgroundColor: colors.background }]}>
         <View style={styles.footerTotal}>
           <Text style={[styles.footerTotalLabel, { color: colors.mutedForeground }]}>{t("total")}</Text>
-          <Text style={[styles.footerTotalValue, { color: colors.foreground }]}>R$ {grandTotal.toFixed(2).replace(".", ",")}</Text>
+          <Text style={[styles.footerTotalValue, { color: colors.foreground }]}>{formatCurrency(grandTotal)}</Text>
         </View>
         <Pressable onPress={() => router.push("/checkout")} style={({ pressed }) => [styles.checkoutBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }]}>
           <Feather name="chevron-right" size={20} color="#fff" />

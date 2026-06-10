@@ -18,7 +18,7 @@ import { useOrders } from "@/context/OrderContext";
 export default function AdminReportsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t } = useLang();
+  const { t, formatCurrency } = useLang();
   const router = useRouter();
   const { getAllOrders } = useOrders();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -46,11 +46,11 @@ export default function AdminReportsScreen() {
   const topProducts = Object.values(productCounts).sort((a, b) => b.count - a.count).slice(0, 5);
 
   const STATS = [
-    { label: "Total de pedidos", value: filtered.length.toString(), icon: "shopping-bag", color: "#2563EB" },
-    { label: "Receita total", value: `R$ ${revenue.toFixed(2).replace(".", ",")}`, icon: "dollar-sign", color: "#16A34A" },
-    { label: "Entregues", value: delivered.toString(), icon: "check-circle", color: "#16A34A" },
-    { label: "Cancelados", value: cancelled.toString(), icon: "x-circle", color: colors.destructive },
-    { label: "Ticket médio", value: `R$ ${avgOrder.toFixed(2).replace(".", ",")}`, icon: "trending-up", color: "#7C3AED" },
+    { label: t("total_orders"), value: filtered.length.toString(), icon: "shopping-bag", color: "#2563EB" },
+    { label: t("total_revenue"), value: formatCurrency(revenue), icon: "dollar-sign", color: "#16A34A" },
+    { label: t("delivered_plural"), value: delivered.toString(), icon: "check-circle", color: "#16A34A" },
+    { label: t("cancelled_plural"), value: cancelled.toString(), icon: "x-circle", color: colors.destructive },
+    { label: t("avg_order"), value: formatCurrency(avgOrder), icon: "trending-up", color: "#7C3AED" },
   ];
 
   return (
@@ -59,8 +59,8 @@ export default function AdminReportsScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
-        <Text style={[styles.title, { color: colors.foreground }]}>Relatórios</Text>
-        <Pressable onPress={() => Alert.alert("", "Exportação disponível na versão completa")} style={[styles.exportBtn, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.title, { color: colors.foreground }]}>{t("reports_title")}</Text>
+        <Pressable onPress={() => Alert.alert("", t("export_btn"))} style={[styles.exportBtn, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Feather name="download" size={16} color={colors.foreground} />
         </Pressable>
       </View>
@@ -71,7 +71,7 @@ export default function AdminReportsScreen() {
           {(["day", "week", "month"] as const).map((p) => (
             <Pressable key={p} onPress={() => setPeriod(p)} style={[styles.toggleBtn, { backgroundColor: period === p ? colors.primary : "transparent" }]}>
               <Text style={[styles.toggleText, { color: period === p ? "#fff" : colors.foreground }]}>
-                {p === "day" ? "Hoje" : p === "week" ? "Semana" : "Mês"}
+                {p === "day" ? t("today") : p === "week" ? t("week") : t("month_label")}
               </Text>
             </Pressable>
           ))}
@@ -92,9 +92,9 @@ export default function AdminReportsScreen() {
 
         {/* Top products */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.foreground }]}>Produtos mais vendidos</Text>
+          <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t("best_sellers")}</Text>
           {topProducts.length === 0 ? (
-            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Nenhum dado disponível</Text>
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{t("no_data")}</Text>
           ) : (
             topProducts.map((p, i) => (
               <View key={p.name} style={styles.rankRow}>
@@ -110,15 +110,15 @@ export default function AdminReportsScreen() {
 
         {/* Recent orders */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.foreground }]}>Pedidos recentes</Text>
+          <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t("recent_orders_section")}</Text>
           {filtered.slice(0, 5).map((order) => (
             <View key={order.id} style={styles.orderRow}>
               <Text style={[styles.orderNum, { color: colors.foreground }]}>{order.orderNumber}</Text>
               <Text style={[styles.orderCustomer, { color: colors.mutedForeground }]} numberOfLines={1}>{order.customerName}</Text>
-              <Text style={[styles.orderTotal, { color: colors.primary }]}>R$ {order.total.toFixed(2).replace(".", ",")}</Text>
+              <Text style={[styles.orderTotal, { color: colors.primary }]}>{formatCurrency(order.total)}</Text>
             </View>
           ))}
-          {filtered.length === 0 && <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Sem pedidos neste período</Text>}
+          {filtered.length === 0 && <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{t("no_orders_period")}</Text>}
         </View>
       </ScrollView>
     </View>

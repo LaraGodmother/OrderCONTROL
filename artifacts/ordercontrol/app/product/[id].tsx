@@ -19,7 +19,7 @@ import { PRODUCTS, CATEGORIES } from "@/data/restaurant";
 export default function ProductDetailScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t } = useLang();
+  const { t, formatCurrency } = useLang();
   const { addItem } = useCart();
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -34,9 +34,9 @@ export default function ProductDetailScreen() {
     return (
       <View style={[styles.notFound, { backgroundColor: colors.background }]}>
         <Feather name="alert-circle" size={48} color={colors.mutedForeground} />
-        <Text style={[styles.notFoundText, { color: colors.foreground }]}>Produto não encontrado</Text>
+        <Text style={[styles.notFoundText, { color: colors.foreground }]}>{t("product_not_found")}</Text>
         <Pressable onPress={() => router.back()} style={[styles.backBtnAlt, { backgroundColor: colors.primary }]}>
-          <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold" }}>Voltar</Text>
+          <Text style={{ color: "#fff", fontFamily: "Inter_600SemiBold" }}>{t("back")}</Text>
         </Pressable>
       </View>
     );
@@ -87,9 +87,9 @@ export default function ProductDetailScreen() {
             <Text style={[styles.productName, { color: colors.foreground }]}>{product.name}</Text>
             <View style={styles.priceRow}>
               {product.isPromo && product.promoPrice && (
-                <Text style={[styles.originalPrice, { color: colors.mutedForeground }]}>R$ {product.price.toFixed(2).replace(".", ",")}</Text>
+                <Text style={[styles.originalPrice, { color: colors.mutedForeground }]}>{formatCurrency(product.price)}</Text>
               )}
-              <Text style={[styles.price, { color: colors.primary }]}>R$ {displayPrice.toFixed(2).replace(".", ",")}</Text>
+              <Text style={[styles.price, { color: colors.primary }]}>{formatCurrency(displayPrice)}</Text>
             </View>
           </View>
 
@@ -134,7 +134,7 @@ export default function ProductDetailScreen() {
       <View style={[styles.footer, { paddingBottom: bottomPad + 16, borderTopColor: colors.border, backgroundColor: colors.background }]}>
         <Pressable onPress={handleAddToCart} style={({ pressed }) => [styles.addBtn, { backgroundColor: colors.primary, opacity: pressed ? 0.9 : 1 }]}>
           <Feather name="shopping-cart" size={20} color="#fff" />
-          <Text style={styles.addBtnText}>{t("add_to_cart")} · R$ {lineTotal.toFixed(2).replace(".", ",")}</Text>
+          <Text style={styles.addBtnText}>{t("add_to_cart")} · {formatCurrency(lineTotal)}</Text>
         </Pressable>
       </View>
     </View>

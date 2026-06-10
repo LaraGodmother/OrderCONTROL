@@ -19,7 +19,7 @@ import { PRODUCTS } from "@/data/restaurant";
 export default function AdminPromotionsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t } = useLang();
+  const { t, formatCurrency } = useLang();
   const router = useRouter();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
@@ -61,26 +61,26 @@ export default function AdminPromotionsScreen() {
               <View style={styles.priceRow}>
                 <View style={styles.priceBlock}>
                   <Text style={[styles.priceLabel, { color: colors.mutedForeground }]}>{t("original_price")}</Text>
-                  <Text style={[styles.originalPrice, { color: colors.mutedForeground }]}>R$ {item.price.toFixed(2).replace(".", ",")}</Text>
+                  <Text style={[styles.originalPrice, { color: colors.mutedForeground }]}>{formatCurrency(item.price)}</Text>
                 </View>
                 <Feather name="arrow-right" size={16} color={colors.mutedForeground} />
                 <View style={styles.priceBlock}>
                   <Text style={[styles.priceLabel, { color: colors.mutedForeground }]}>{t("promo_price")}</Text>
-                  <Text style={[styles.promoPrice, { color: colors.primary }]}>R$ {item.promoPrice?.toFixed(2).replace(".", ",")}</Text>
+                  <Text style={[styles.promoPrice, { color: colors.primary }]}>{formatCurrency(item.promoPrice ?? 0)}</Text>
                 </View>
                 <View style={styles.priceBlock}>
-                  <Text style={[styles.priceLabel, { color: colors.mutedForeground }]}>Economia</Text>
-                  <Text style={[styles.saving, { color: colors.success }]}>R$ {((item.price) - (item.promoPrice ?? 0)).toFixed(2).replace(".", ",")}</Text>
+                  <Text style={[styles.priceLabel, { color: colors.mutedForeground }]}>{t("savings")}</Text>
+                  <Text style={[styles.saving, { color: colors.success }]}>{formatCurrency((item.price) - (item.promoPrice ?? 0))}</Text>
                 </View>
               </View>
               <View style={styles.actions}>
                 <Pressable onPress={() => Alert.alert("", "Edição disponível na versão completa")} style={[styles.actionBtn, { backgroundColor: colors.accent }]}>
                   <Feather name="edit-2" size={14} color={colors.primary} />
-                  <Text style={[styles.actionText, { color: colors.primary }]}>Editar</Text>
+                  <Text style={[styles.actionText, { color: colors.primary }]}>{t("edit")}</Text>
                 </Pressable>
-                <Pressable onPress={() => Alert.alert("Remover", `Remover promoção de "${item.name}"?`, [{ text: t("cancel"), style: "cancel" }, { text: t("delete"), style: "destructive" }])} style={[styles.actionBtn, { backgroundColor: "#FEE2E2" }]}>
+                <Pressable onPress={() => Alert.alert(t("remove"), `${t("remove")} "${item.name}"?`, [{ text: t("cancel"), style: "cancel" }, { text: t("delete"), style: "destructive" }])} style={[styles.actionBtn, { backgroundColor: "#FEE2E2" }]}>
                   <Feather name="trash-2" size={14} color={colors.destructive} />
-                  <Text style={[styles.actionText, { color: colors.destructive }]}>Remover</Text>
+                  <Text style={[styles.actionText, { color: colors.destructive }]}>{t("remove")}</Text>
                 </Pressable>
               </View>
             </View>

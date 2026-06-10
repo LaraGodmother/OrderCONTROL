@@ -11,28 +11,44 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
-import { useLang } from "@/context/LangContext";
+import { useLang, Language } from "@/context/LangContext";
 import { useOrders, OrderStatus } from "@/context/OrderContext";
 import { OrderStatusBadge } from "@/components/OrderStatusBadge";
 
-const FILTER_TABS: { key: OrderStatus | "all"; label: string }[] = [
-  { key: "all", label: "Todos" },
-  { key: "received", label: "Recebidos" },
-  { key: "preparing", label: "Preparando" },
-  { key: "ready", label: "Prontos" },
-  { key: "delivering", label: "Entrega" },
-  { key: "delivered", label: "Entregues" },
-  { key: "cancelled", label: "Cancelados" },
-];
+const LOCALE_MAP: Record<Language, string> = {
+  "pt-BR": "pt-BR",
+  "pt-PT": "pt-PT",
+  "en": "en-US",
+  "es": "es-ES",
+  "fr": "fr-FR",
+};
 
 export default function AdminOrdersScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t } = useLang();
+  const { t, formatCurrency, language } = useLang();
   const router = useRouter();
   const { getAllOrders, updateOrderStatus } = useOrders();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const [filter, setFilter] = useState<OrderStatus | "all">("all");
+  const dateLocale = LOCALE_MAP[language] ?? "pt-BR";
+
+  const FILTER_TABS: { key: OrderStatus | "all"; label: string }[] = [
+    { key: "all", label: t("all_filter") },
+    { key: "received", label: t("received_plural") },
+    { key: "preparing", label: t("status_preparing") },
+    { key: "ready", label: t("ready_plural") },
+    { key: "delivering", label: t("delivering_filter") },
+    { key: "delivered", label: t("delivered_plural") },
+    { key: "cancelled", label: t("cancelled_plural") },
+  ];
+
+  const NEXT_LABELS: Partial<Record<OrderStatus, string>> = {
+    preparing: t("status_preparing"),
+    ready: t("status_ready"),
+    delivering: t("status_delivering"),
+    delivered: t("status_delivered"),
+  };
 
   const allOrders = getAllOrders().sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const filtered = filter === "all" ? allOrders : allOrders.filter((o) => o.status === filter);
@@ -48,7 +64,7 @@ export default function AdminOrdersScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
-        <Text style={[styles.title, { color: colors.foreground }]}>Pedidos</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>{t("orders")}</Text>
         <Text style={[styles.count, { color: colors.mutedForeground }]}>{filtered.length}</Text>
       </View>
 
@@ -74,7 +90,7 @@ export default function AdminOrdersScreen() {
         ListEmptyComponent={
           <View style={styles.empty}>
             <Feather name="inbox" size={48} color={colors.mutedForeground} />
-            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>Nenhum pedido encontrado</Text>
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{t("no_orders_found")}</Text>
           </View>
         }
         renderItem={({ item: order }) => {
@@ -101,15 +117,15 @@ export default function AdminOrdersScreen() {
               )}
 
               <View style={styles.orderFooter}>
-                <Text style={[styles.orderTotal, { color: colors.primary }]}>R$ {order.total.toFixed(2).replace(".", ",")}</Text>
+                <Text style={[styles.orderTotal, { color: colors.primary }]}>{formatCurrency(order.total)}</Text>
                 <Text style={[styles.orderTime, { color: colors.mutedForeground }]}>
-                  {new Date(order.createdAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(order.createdAt).toLocaleTimeString(dateLocale, { hour: "2-digit", minute: "2-digit" })}
                 </Text>
               </View>
 
               {next && (
                 <Pressable onPress={() => updateOrderStatus(order.id, next)} style={[styles.advanceBtn, { backgroundColor: colors.primary }]}>
-                  <Text style={styles.advanceBtnText}>Avançar para: {next === "preparing" ? "Preparando" : next === "ready" ? "Pronto" : next === "delivering" ? "Em entrega" : "Entregue"}</Text>
+                  <Text style={styles.advanceBtnText}>{t("advance_to")} {NEXT_LABELS[next]}</Text>
                   <Feather name="arrow-right" size={14} color="#fff" />
                 </Pressable>
               )}
@@ -128,10 +144,12 @@ const styles = StyleSheet.create({
   count: { fontSize: 14, fontFamily: "Inter_400Regular" },
   filterTab: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20 },
   filterText: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  empty: { alignItems: "center", paddingVertical: 40, gap: 10 },
+  emptyText: { fontSize: 14, fontFamily: "Inter_400Regular" },
   orderCard: { borderRadius: 16, padding: 14, gap: 10 },
   orderHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
   orderNum: { fontSize: 15, fontFamily: "Inter_700Bold" },
-  customerName: { fontSize: 12, fontFamily: "Inter_400Regular" },
+  customerName: { fontSize: 13, fontFamily: "Inter_400Regular", marginTop: 2 },
   orderItems: { fontSize: 13, fontFamily: "Inter_400Regular" },
   addressRow: { flexDirection: "row", alignItems: "center", gap: 6 },
   addressText: { fontSize: 12, fontFamily: "Inter_400Regular", flex: 1 },
@@ -140,6 +158,4 @@ const styles = StyleSheet.create({
   orderTime: { fontSize: 12, fontFamily: "Inter_400Regular" },
   advanceBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 10, borderRadius: 10 },
   advanceBtnText: { color: "#fff", fontSize: 13, fontFamily: "Inter_600SemiBold" },
-  empty: { alignItems: "center", paddingVertical: 60, gap: 12 },
-  emptyText: { fontSize: 15, fontFamily: "Inter_400Regular" },
 });

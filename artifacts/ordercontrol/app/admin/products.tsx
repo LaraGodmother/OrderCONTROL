@@ -19,7 +19,7 @@ import { PRODUCTS, CATEGORIES } from "@/data/restaurant";
 export default function AdminProductsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t } = useLang();
+  const { t, formatCurrency } = useLang();
   const router = useRouter();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -41,7 +41,7 @@ export default function AdminProductsScreen() {
       {/* Category filter */}
       <FlatList
         horizontal
-        data={[{ id: "all", name: "Todos", icon: "🍽️" }, ...CATEGORIES]}
+        data={[{ id: "all", name: t("all_filter"), icon: "🍽️" }, ...CATEGORIES]}
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 10, gap: 8 }}
@@ -70,8 +70,8 @@ export default function AdminProductsScreen() {
               <Text style={[styles.productName, { color: colors.foreground }]} numberOfLines={1}>{item.name}</Text>
               <Text style={[styles.productCat, { color: colors.mutedForeground }]}>{CATEGORIES.find((c) => c.id === item.categoryId)?.name}</Text>
               <View style={styles.priceRow}>
-                {item.promoPrice && <Text style={[styles.origPrice, { color: colors.mutedForeground }]}>R$ {item.price.toFixed(2).replace(".", ",")}</Text>}
-                <Text style={[styles.price, { color: colors.primary }]}>R$ {(item.promoPrice ?? item.price).toFixed(2).replace(".", ",")}</Text>
+                {item.promoPrice && <Text style={[styles.origPrice, { color: colors.mutedForeground }]}>{formatCurrency(item.price)}</Text>}
+                <Text style={[styles.price, { color: colors.primary }]}>{formatCurrency(item.promoPrice ?? item.price)}</Text>
               </View>
             </View>
             <View style={styles.productActions}>

@@ -20,17 +20,10 @@ import { useOrders, DeliveryType, PaymentMethod } from "@/context/OrderContext";
 import { useAuth } from "@/context/AuthContext";
 import { RESTAURANT } from "@/data/restaurant";
 
-const PAYMENT_OPTIONS: { key: PaymentMethod; label: string; icon: string }[] = [
-  { key: "pix", label: "PIX", icon: "zap" },
-  { key: "cash", label: "Dinheiro", icon: "dollar-sign" },
-  { key: "credit_card", label: "Cartão de Crédito", icon: "credit-card" },
-  { key: "pay_on_delivery", label: "Pagar na Entrega", icon: "truck" },
-];
-
 export default function CheckoutScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { t } = useLang();
+  const { t, formatCurrency } = useLang();
   const { items, total, clearCart } = useCart();
   const { createOrder } = useOrders();
   const { user } = useAuth();
@@ -48,14 +41,21 @@ export default function CheckoutScreen() {
   const deliveryFee = deliveryType === "delivery" ? RESTAURANT.deliveryFee : 0;
   const grandTotal = total + deliveryFee;
 
+  const PAYMENT_OPTIONS: { key: PaymentMethod; label: string; icon: string }[] = [
+    { key: "pix", label: t("pix"), icon: "zap" },
+    { key: "cash", label: t("cash"), icon: "dollar-sign" },
+    { key: "credit_card", label: t("credit_card"), icon: "credit-card" },
+    { key: "pay_on_delivery", label: t("pay_on_delivery"), icon: "truck" },
+  ];
+
   async function handleOrder() {
     if (!user) {
-      Alert.alert("", "Faça login para continuar");
+      Alert.alert("", t("login_required"));
       router.push("/auth/login");
       return;
     }
     if (deliveryType === "delivery" && !address) {
-      Alert.alert(t("error"), "Informe o endereço de entrega");
+      Alert.alert(t("error"), t("provide_delivery_address"));
       return;
     }
     setLoading(true);
@@ -86,13 +86,13 @@ export default function CheckoutScreen() {
           <Pressable onPress={() => router.back()} style={styles.backBtn}>
             <Feather name="arrow-left" size={22} color={colors.foreground} />
           </Pressable>
-          <Text style={[styles.title, { color: colors.foreground }]}>Finalizar Pedido</Text>
+          <Text style={[styles.title, { color: colors.foreground }]}>{t("checkout")}</Text>
         </View>
 
         <View style={{ padding: 16, gap: 20 }}>
           {/* Delivery type */}
           <View>
-            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Tipo de entrega</Text>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("delivery_type")}</Text>
             <View style={[styles.toggle, { backgroundColor: colors.card }]}>
               {(["delivery", "pickup"] as const).map((type) => (
                 <Pressable key={type} onPress={() => setDeliveryType(type)} style={[styles.toggleBtn, { backgroundColor: deliveryType === type ? colors.primary : "transparent" }]}>
@@ -108,7 +108,7 @@ export default function CheckoutScreen() {
           {/* Address fields */}
           {deliveryType === "delivery" && (
             <View style={styles.fieldsSection}>
-              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Endereço de entrega</Text>
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("delivery_address_section")}</Text>
               {[
                 { label: t("address"), value: address, set: setAddress, icon: "map-pin" },
                 { label: t("neighborhood"), value: neighborhood, set: setNeighborhood, icon: "map" },
@@ -138,25 +138,25 @@ export default function CheckoutScreen() {
 
           {/* Summary */}
           <View style={[styles.summaryCard, { backgroundColor: colors.card }]}>
-            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Resumo do pedido</Text>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("order_summary")}</Text>
             {items.map((item) => (
               <View key={item.id} style={styles.summaryRow}>
                 <Text style={[styles.summaryItem, { color: colors.foreground }]}>{item.quantity}x {item.name}</Text>
-                <Text style={[styles.summaryPrice, { color: colors.foreground }]}>R$ {(item.price * item.quantity).toFixed(2).replace(".", ",")}</Text>
+                <Text style={[styles.summaryPrice, { color: colors.foreground }]}>{formatCurrency(item.price * item.quantity)}</Text>
               </View>
             ))}
             <View style={[styles.divider, { borderTopColor: colors.border }]} />
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>{t("subtotal")}</Text>
-              <Text style={[styles.summaryValue, { color: colors.foreground }]}>R$ {total.toFixed(2).replace(".", ",")}</Text>
+              <Text style={[styles.summaryValue, { color: colors.foreground }]}>{formatCurrency(total)}</Text>
             </View>
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>{t("delivery_fee")}</Text>
-              <Text style={[styles.summaryValue, { color: colors.foreground }]}>{deliveryFee === 0 ? "Grátis" : `R$ ${deliveryFee.toFixed(2).replace(".", ",")}`}</Text>
+              <Text style={[styles.summaryValue, { color: colors.foreground }]}>{deliveryFee === 0 ? t("free") : formatCurrency(deliveryFee)}</Text>
             </View>
             <View style={[styles.summaryRow, { marginTop: 8 }]}>
               <Text style={[styles.totalLabel, { color: colors.foreground }]}>{t("total")}</Text>
-              <Text style={[styles.totalValue, { color: colors.primary }]}>R$ {grandTotal.toFixed(2).replace(".", ",")}</Text>
+              <Text style={[styles.totalValue, { color: colors.primary }]}>{formatCurrency(grandTotal)}</Text>
             </View>
           </View>
         </View>
@@ -165,7 +165,7 @@ export default function CheckoutScreen() {
       <View style={[styles.footer, { paddingBottom: bottomPad + 16, borderTopColor: colors.border, backgroundColor: colors.background }]}>
         <Pressable onPress={handleOrder} disabled={loading} style={({ pressed }) => [styles.orderBtn, { backgroundColor: colors.primary, opacity: pressed || loading ? 0.85 : 1 }]}>
           {!loading && <Feather name="check-circle" size={20} color="#fff" />}
-          <Text style={styles.orderBtnText}>{loading ? "Processando..." : t("place_order")}</Text>
+          <Text style={styles.orderBtnText}>{loading ? t("processing") : t("place_order")}</Text>
         </Pressable>
       </View>
     </KeyboardAvoidingView>

@@ -1,14 +1,15 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { OrderStatus } from "@/context/OrderContext";
+import { useLang } from "@/context/LangContext";
 
-const STATUS_CONFIG: Record<OrderStatus, { label: string; bg: string; text: string }> = {
-  received: { label: "Recebido", bg: "#DBEAFE", text: "#1D4ED8" },
-  preparing: { label: "Preparando", bg: "#FEF3C7", text: "#D97706" },
-  ready: { label: "Pronto", bg: "#D1FAE5", text: "#059669" },
-  delivering: { label: "Saiu p/ entrega", bg: "#EDE9FE", text: "#7C3AED" },
-  delivered: { label: "Entregue", bg: "#D1FAE5", text: "#059669" },
-  cancelled: { label: "Cancelado", bg: "#FEE2E2", text: "#DC2626" },
+const STATUS_COLORS: Record<OrderStatus, { bg: string; text: string }> = {
+  received: { bg: "#DBEAFE", text: "#1D4ED8" },
+  preparing: { bg: "#FEF3C7", text: "#D97706" },
+  ready: { bg: "#D1FAE5", text: "#059669" },
+  delivering: { bg: "#EDE9FE", text: "#7C3AED" },
+  delivered: { bg: "#D1FAE5", text: "#059669" },
+  cancelled: { bg: "#FEE2E2", text: "#DC2626" },
 };
 
 interface OrderStatusBadgeProps {
@@ -17,20 +18,30 @@ interface OrderStatusBadgeProps {
 }
 
 export function OrderStatusBadge({ status, size = "sm" }: OrderStatusBadgeProps) {
-  const config = STATUS_CONFIG[status];
+  const { t } = useLang();
+  const colors = STATUS_COLORS[status];
   const fontSize = size === "md" ? 13 : 11;
   const paddingH = size === "md" ? 10 : 7;
   const paddingV = size === "md" ? 5 : 3;
+
+  const STATUS_LABELS: Record<OrderStatus, string> = {
+    received: t("status_received"),
+    preparing: t("status_preparing"),
+    ready: t("status_ready"),
+    delivering: t("status_delivering"),
+    delivered: t("status_delivered"),
+    cancelled: t("status_cancelled"),
+  };
 
   return (
     <View
       style={[
         styles.badge,
-        { backgroundColor: config.bg, paddingHorizontal: paddingH, paddingVertical: paddingV },
+        { backgroundColor: colors.bg, paddingHorizontal: paddingH, paddingVertical: paddingV },
       ]}
     >
-      <Text style={[styles.text, { color: config.text, fontSize, fontFamily: "Inter_600SemiBold" }]}>
-        {config.label}
+      <Text style={[styles.text, { color: colors.text, fontSize, fontFamily: "Inter_600SemiBold" }]}>
+        {STATUS_LABELS[status]}
       </Text>
     </View>
   );
