@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
+  Alert,
   Platform,
   Pressable,
   ScrollView,
@@ -28,7 +29,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { t, language, setLanguage } = useLang();
-  const { user, logout, updateProfile } = useAuth();
+  const { user, logout, updateProfile, changePassword } = useAuth();
   const { getUnreadCount } = useChat();
   const router = useRouter();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
@@ -40,6 +41,14 @@ export default function ProfileScreen() {
   const [city, setCity] = useState(user?.city ?? "");
   const [saving, setSaving] = useState(false);
 
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+
   const chatUnread = user ? getUnreadCount(user.id) : 0;
 
   async function handleSave() {
@@ -47,6 +56,29 @@ export default function ProfileScreen() {
     await updateProfile({ name, phone, address, city });
     setSaving(false);
     setEditing(false);
+  }
+
+  async function handleChangePassword() {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      Alert.alert(t("error"), "Preencha todos os campos de senha");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert(t("error"), t("passwords_dont_match"));
+      return;
+    }
+    setSavingPassword(true);
+    const result = await changePassword(oldPassword, newPassword);
+    setSavingPassword(false);
+    if (result.success) {
+      Alert.alert(t("success"), t("password_changed"));
+      setChangingPassword(false);
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } else {
+      Alert.alert(t("error"), result.error ?? "Erro ao alterar senha");
+    }
   }
 
   async function handleLogout() {
@@ -65,7 +97,7 @@ export default function ProfileScreen() {
           onPress={() => router.push("/auth/login")}
           style={[styles.loginBtn, { backgroundColor: colors.primary }]}
         >
-          <Feather name="log-in" size={16} color="#fff" />
+          <Feather name="log-in" size={16} color="#000" />
           <Text style={styles.loginBtnText}>{t("login")}</Text>
         </Pressable>
         <Pressable onPress={() => router.push("/auth/register")}>
@@ -153,10 +185,7 @@ export default function ProfileScreen() {
                 <TextInput
                   value={field.value}
                   onChangeText={field.set}
-                  style={[
-                    styles.fieldInput,
-                    { color: colors.foreground, borderBottomColor: colors.border },
-                  ]}
+                  style={[styles.fieldInput, { color: colors.foreground, borderBottomColor: colors.border }]}
                 />
               ) : (
                 <Text style={[styles.fieldValue, { color: colors.foreground }]}>
@@ -170,12 +199,56 @@ export default function ProfileScreen() {
               onPress={handleSave}
               style={[styles.saveBtn, { backgroundColor: colors.primary }]}
             >
-              <Text style={styles.saveBtnText}>
-                {saving ? t("saving") : t("save")}
-              </Text>
+              <Text style={styles.saveBtnText}>{saving ? t("saving") : t("save")}</Text>
             </Pressable>
           )}
         </View>
+      </View>
+
+      {/* Change Password */}
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <View style={styles.sectionHeader}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("change_password")}</Text>
+          <Pressable onPress={() => setChangingPassword(!changingPassword)}>
+            <Text style={[styles.seeAll, { color: colors.primary }]}>
+              {changingPassword ? t("cancel") : t("edit")}
+            </Text>
+          </Pressable>
+        </View>
+        {changingPassword ? (
+          <View style={styles.fields}>
+            {[
+              { label: t("current_password"), value: oldPassword, set: setOldPassword, show: showOld, toggleShow: () => setShowOld(!showOld) },
+              { label: t("new_password"), value: newPassword, set: setNewPassword, show: showNew, toggleShow: () => setShowNew(!showNew) },
+              { label: t("confirm_new_password"), value: confirmPassword, set: setConfirmPassword, show: showNew, toggleShow: () => setShowNew(!showNew) },
+            ].map((field) => (
+              <View key={field.label}>
+                <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>{field.label}</Text>
+                <View style={[styles.passwordRow, { borderBottomColor: colors.border }]}>
+                  <TextInput
+                    value={field.value}
+                    onChangeText={field.set}
+                    secureTextEntry={!field.show}
+                    style={[styles.fieldInput, { color: colors.foreground, flex: 1, borderBottomWidth: 0 }]}
+                  />
+                  <Pressable onPress={field.toggleShow}>
+                    <Feather name={field.show ? "eye-off" : "eye"} size={16} color={colors.mutedForeground} />
+                  </Pressable>
+                </View>
+              </View>
+            ))}
+            <Pressable
+              onPress={handleChangePassword}
+              style={[styles.saveBtn, { backgroundColor: colors.primary }]}
+            >
+              <Text style={styles.saveBtnText}>{savingPassword ? t("saving") : t("change_password")}</Text>
+            </Pressable>
+          </View>
+        ) : (
+          <Text style={[{ color: colors.mutedForeground, fontSize: 14, fontFamily: "Inter_400Regular" }]}>
+            ••••••••
+          </Text>
+        )}
       </View>
 
       {/* Language */}
@@ -298,7 +371,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 14,
   },
-  loginBtnText: { color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 16 },
+  loginBtnText: { color: "#000", fontFamily: "Inter_600SemiBold", fontSize: 16 },
   registerLink: { fontSize: 14, fontFamily: "Inter_500Medium" },
   avatarSection: {
     alignItems: "center",
@@ -315,7 +388,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 8,
   },
-  avatarText: { color: "#fff", fontSize: 32, fontFamily: "Inter_700Bold" },
+  avatarText: { color: "#000", fontSize: 32, fontFamily: "Inter_700Bold" },
   userName: { fontSize: 20, fontFamily: "Inter_700Bold" },
   userEmail: { fontSize: 14, fontFamily: "Inter_400Regular" },
   adminBadge: {
@@ -324,7 +397,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginTop: 6,
   },
-  adminBadgeText: { color: "#fff", fontSize: 11, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
+  adminBadgeText: { color: "#000", fontSize: 11, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
   adminBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -355,8 +428,14 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     paddingBottom: 4,
   },
+  passwordRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    paddingBottom: 4,
+  },
   saveBtn: { marginTop: 14, paddingVertical: 12, borderRadius: 12, alignItems: "center" },
-  saveBtnText: { color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 15 },
+  saveBtnText: { color: "#000", fontFamily: "Inter_600SemiBold", fontSize: 15 },
   langRow: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 12 },
   langFlag: { fontSize: 22 },
   langLabel: { fontSize: 15, fontFamily: "Inter_500Medium", flex: 1 },

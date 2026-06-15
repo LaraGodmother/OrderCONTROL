@@ -12,88 +12,186 @@ export interface User {
   city?: string;
   zipCode?: string;
   role: UserRole;
+  tenantId: string;
 }
 
-interface AuthContextType {
-  user: User | null;
-  isLoading: boolean;
-  login: (email: string, password: string, role: UserRole) => Promise<boolean>;
-  register: (data: RegisterData) => Promise<boolean>;
-  logout: () => Promise<void>;
-  updateProfile: (data: Partial<User>) => Promise<void>;
+interface StoredUser extends User {
+  password: string;
 }
 
-interface RegisterData {
+interface TenantEntry {
+  adminEmail: string;
+  restaurantName: string;
+  createdAt: string;
+}
+
+type TenantRegistry = Record<string, TenantEntry>;
+
+interface RegisterRestaurantData {
+  restaurantName: string;
+  adminName: string;
+  email: string;
+  password: string;
+}
+
+interface RegisterCustomerData {
   name: string;
   email: string;
   password: string;
+  restaurantCode: string;
   phone?: string;
   address?: string;
   city?: string;
   zipCode?: string;
 }
 
+interface AuthContextType {
+  user: User | null;
+  tenantId: string | null;
+  isLoading: boolean;
+  login: (email: string, password: string) => Promise<{ success: boolean; role?: UserRole }>;
+  registerRestaurant: (data: RegisterRestaurantData) => Promise<{ success: boolean; tenantCode?: string; error?: string }>;
+  register: (data: RegisterCustomerData) => Promise<{ success: boolean; error?: string }>;
+  logout: () => Promise<void>;
+  updateProfile: (data: Partial<Omit<User, "id" | "role" | "tenantId">>) => Promise<void>;
+  changePassword: (oldPassword: string, newPassword: string) => Promise<{ success: boolean; error?: string }>;
+  validateRestaurantCode: (code: string) => Promise<boolean>;
+}
+
+const TENANTS_KEY = "@ordercontrol_tenants";
+const SESSION_KEY = "@ordercontrol_session";
+
+function usersKey(tenantId: string) {
+  return `@ordercontrol_${tenantId}_users`;
+}
+
+function generateTenantCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
+}
+
+async function getTenants(): Promise<TenantRegistry> {
+  try {
+    const raw = await AsyncStorage.getItem(TENANTS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+async function getUsersForTenant(tenantId: string): Promise<Record<string, StoredUser>> {
+  try {
+    const raw = await AsyncStorage.getItem(usersKey(tenantId));
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
 const AuthContext = createContext<AuthContextType | null>(null);
-
-const MOCK_ADMIN = {
-  id: "admin-1",
-  name: "Administrador",
-  email: "admin@ordercontrol.com",
-  role: "admin" as UserRole,
-};
-
-const MOCK_CUSTOMER = {
-  id: "customer-1",
-  name: "João Silva",
-  email: "joao@email.com",
-  phone: "(11) 99999-9999",
-  address: "Rua das Flores, 123",
-  city: "São Paulo",
-  zipCode: "01310-100",
-  role: "customer" as UserRole,
-};
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [tenantId, setTenantId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadUser();
+    loadSession();
   }, []);
 
-  async function loadUser() {
+  async function loadSession() {
     try {
-      const stored = await AsyncStorage.getItem("@ordercontrol_user");
+      const sessionRaw = await AsyncStorage.getItem(SESSION_KEY);
+      if (!sessionRaw) return;
+      const session: { userId: string; tenantId: string } = JSON.parse(sessionRaw);
+      const users = await getUsersForTenant(session.tenantId);
+      const stored = users[session.userId];
       if (stored) {
-        setUser(JSON.parse(stored));
+        const { password: _p, ...u } = stored;
+        setUser(u);
+        setTenantId(session.tenantId);
       }
     } catch {
-      // ignore
     } finally {
       setIsLoading(false);
     }
   }
 
-  async function login(email: string, password: string, role: UserRole): Promise<boolean> {
-    await new Promise((r) => setTimeout(r, 800));
-    if (role === "admin" && email === "admin@ordercontrol.com" && password === "admin123") {
-      await AsyncStorage.setItem("@ordercontrol_user", JSON.stringify(MOCK_ADMIN));
-      setUser(MOCK_ADMIN);
-      return true;
+  async function login(email: string, password: string): Promise<{ success: boolean; role?: UserRole }> {
+    await new Promise((r) => setTimeout(r, 600));
+    const tenants = await getTenants();
+    for (const tid of Object.keys(tenants)) {
+      const users = await getUsersForTenant(tid);
+      const match = Object.values(users).find(
+        (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
+      );
+      if (match) {
+        const { password: _p, ...u } = match;
+        await AsyncStorage.setItem(SESSION_KEY, JSON.stringify({ userId: u.id, tenantId: tid }));
+        setUser(u);
+        setTenantId(tid);
+        return { success: true, role: u.role };
+      }
     }
-    if (role === "customer") {
-      const u = { ...MOCK_CUSTOMER, email };
-      await AsyncStorage.setItem("@ordercontrol_user", JSON.stringify(u));
-      setUser(u);
-      return true;
-    }
-    return false;
+    return { success: false };
   }
 
-  async function register(data: RegisterData): Promise<boolean> {
-    await new Promise((r) => setTimeout(r, 1000));
-    const newUser: User = {
-      id: Date.now().toString(),
+  async function registerRestaurant(data: RegisterRestaurantData): Promise<{ success: boolean; tenantCode?: string; error?: string }> {
+    await new Promise((r) => setTimeout(r, 800));
+    const tenants = await getTenants();
+    for (const tid of Object.keys(tenants)) {
+      const users = await getUsersForTenant(tid);
+      if (Object.values(users).find((u) => u.email.toLowerCase() === data.email.toLowerCase())) {
+        return { success: false, error: "E-mail já cadastrado em outro restaurante" };
+      }
+    }
+    let tenantCode = generateTenantCode();
+    while (tenants[tenantCode]) {
+      tenantCode = generateTenantCode();
+    }
+    tenants[tenantCode] = {
+      adminEmail: data.email,
+      restaurantName: data.restaurantName,
+      createdAt: new Date().toISOString(),
+    };
+    await AsyncStorage.setItem(TENANTS_KEY, JSON.stringify(tenants));
+    const adminUser: StoredUser = {
+      id: `admin_${Date.now()}`,
+      name: data.adminName,
+      email: data.email,
+      role: "admin",
+      tenantId: tenantCode,
+      password: data.password,
+    };
+    await AsyncStorage.setItem(usersKey(tenantCode), JSON.stringify({ [adminUser.id]: adminUser }));
+    await AsyncStorage.setItem(
+      `@ordercontrol_${tenantCode}_restaurant`,
+      JSON.stringify({ name: data.restaurantName })
+    );
+    await AsyncStorage.setItem(SESSION_KEY, JSON.stringify({ userId: adminUser.id, tenantId: tenantCode }));
+    const { password: _p, ...u } = adminUser;
+    setUser(u);
+    setTenantId(tenantCode);
+    return { success: true, tenantCode };
+  }
+
+  async function register(data: RegisterCustomerData): Promise<{ success: boolean; error?: string }> {
+    await new Promise((r) => setTimeout(r, 800));
+    const tenantCode = data.restaurantCode.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const tenants = await getTenants();
+    if (!tenants[tenantCode]) {
+      return { success: false, error: "Código do restaurante inválido. Verifique e tente novamente." };
+    }
+    const users = await getUsersForTenant(tenantCode);
+    if (Object.values(users).find((u) => u.email.toLowerCase() === data.email.toLowerCase())) {
+      return { success: false, error: "E-mail já cadastrado neste restaurante" };
+    }
+    const newUser: StoredUser = {
+      id: `customer_${Date.now()}`,
       name: data.name,
       email: data.email,
       phone: data.phone,
@@ -101,26 +199,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       city: data.city,
       zipCode: data.zipCode,
       role: "customer",
+      tenantId: tenantCode,
+      password: data.password,
     };
-    await AsyncStorage.setItem("@ordercontrol_user", JSON.stringify(newUser));
-    setUser(newUser);
-    return true;
+    users[newUser.id] = newUser;
+    await AsyncStorage.setItem(usersKey(tenantCode), JSON.stringify(users));
+    await AsyncStorage.setItem(SESSION_KEY, JSON.stringify({ userId: newUser.id, tenantId: tenantCode }));
+    const { password: _p, ...u } = newUser;
+    setUser(u);
+    setTenantId(tenantCode);
+    return { success: true };
   }
 
   async function logout() {
-    await AsyncStorage.removeItem("@ordercontrol_user");
+    await AsyncStorage.removeItem(SESSION_KEY);
     setUser(null);
+    setTenantId(null);
   }
 
-  async function updateProfile(data: Partial<User>) {
-    if (!user) return;
-    const updated = { ...user, ...data };
-    await AsyncStorage.setItem("@ordercontrol_user", JSON.stringify(updated));
-    setUser(updated);
+  async function updateProfile(data: Partial<Omit<User, "id" | "role" | "tenantId">>) {
+    if (!user || !tenantId) return;
+    const users = await getUsersForTenant(tenantId);
+    const stored = users[user.id];
+    if (!stored) return;
+    const updated: StoredUser = { ...stored, ...data };
+    users[user.id] = updated;
+    await AsyncStorage.setItem(usersKey(tenantId), JSON.stringify(users));
+    const { password: _p, ...u } = updated;
+    setUser(u);
+  }
+
+  async function changePassword(oldPassword: string, newPassword: string): Promise<{ success: boolean; error?: string }> {
+    if (!user || !tenantId) return { success: false, error: "Não autenticado" };
+    const users = await getUsersForTenant(tenantId);
+    const stored = users[user.id];
+    if (!stored || stored.password !== oldPassword) {
+      return { success: false, error: "Senha atual incorreta" };
+    }
+    if (newPassword.length < 6) {
+      return { success: false, error: "Nova senha deve ter pelo menos 6 caracteres" };
+    }
+    users[user.id] = { ...stored, password: newPassword };
+    await AsyncStorage.setItem(usersKey(tenantId), JSON.stringify(users));
+    return { success: true };
+  }
+
+  async function validateRestaurantCode(code: string): Promise<boolean> {
+    const tenantCode = code.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    const tenants = await getTenants();
+    return !!tenants[tenantCode];
   }
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout, updateProfile }}>
+    <AuthContext.Provider
+      value={{ user, tenantId, isLoading, login, registerRestaurant, register, logout, updateProfile, changePassword, validateRestaurantCode }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -44,8 +44,8 @@ export default function RootLayout() {
         <SafeAreaProvider>
           <KeyboardProvider>
             <LangProvider>
-              <RestaurantProvider>
-                <AuthProvider>
+              <AuthProvider>
+                <RestaurantProvider>
                   <OrderProvider>
                     <CartProvider>
                       <ChatProvider>
@@ -53,6 +53,7 @@ export default function RootLayout() {
                           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                           <Stack.Screen name="auth/login" options={{ headerShown: false, presentation: "modal" }} />
                           <Stack.Screen name="auth/register" options={{ headerShown: false, presentation: "modal" }} />
+                          <Stack.Screen name="auth/register-restaurant" options={{ headerShown: false, presentation: "modal" }} />
                           <Stack.Screen name="product/[id]" options={{ headerShown: false, presentation: "modal" }} />
                           <Stack.Screen name="order/[id]" options={{ headerShown: false }} />
                           <Stack.Screen name="checkout" options={{ headerShown: false }} />
@@ -71,8 +72,8 @@ export default function RootLayout() {
                       </ChatProvider>
                     </CartProvider>
                   </OrderProvider>
-                </AuthProvider>
-              </RestaurantProvider>
+                </RestaurantProvider>
+              </AuthProvider>
             </LangProvider>
           </KeyboardProvider>
         </SafeAreaProvider>

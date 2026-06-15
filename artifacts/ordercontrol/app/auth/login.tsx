@@ -15,7 +15,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useLang } from "@/context/LangContext";
-import { useAuth, UserRole } from "@/context/AuthContext";
+import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/Button";
 
 export default function LoginScreen() {
@@ -27,7 +27,6 @@ export default function LoginScreen() {
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
 
-  const [role, setRole] = useState<UserRole>("customer");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,53 +34,44 @@ export default function LoginScreen() {
 
   async function handleLogin() {
     if (!email || !password) {
-      Alert.alert(t("error"), "Preencha todos os campos");
+      Alert.alert(t("error"), "Preencha e-mail e senha");
       return;
     }
     setLoading(true);
-    const success = await login(email, password, role);
+    const result = await login(email, password);
     setLoading(false);
-    if (success) {
-      if (role === "admin") {
+    if (result.success) {
+      if (result.role === "admin") {
         router.replace("/admin");
       } else {
         router.replace("/(tabs)");
       }
     } else {
-      Alert.alert(t("error"), "Credenciais inválidas. Verifique seu e-mail e senha.");
+      Alert.alert(t("error"), "E-mail ou senha incorretos. Verifique e tente novamente.");
     }
   }
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: colors.background }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-      <ScrollView contentContainerStyle={{ flexGrow: 1, padding: 24, paddingTop: topPad + 20, paddingBottom: bottomPad + 40 }} keyboardShouldPersistTaps="handled">
-        {/* Back */}
+    <KeyboardAvoidingView
+      style={{ flex: 1, backgroundColor: colors.background }}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, padding: 24, paddingTop: topPad + 20, paddingBottom: bottomPad + 40 }}
+        keyboardShouldPersistTaps="handled"
+      >
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
 
-        {/* Title */}
         <View style={styles.titleSection}>
           <View style={[styles.logoCircle, { backgroundColor: colors.primary }]}>
-            <Feather name="shopping-bag" size={32} color="#fff" />
+            <Feather name="shopping-bag" size={32} color="#000" />
           </View>
           <Text style={[styles.appName, { color: colors.foreground }]}>OrderControl</Text>
           <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Bem-vindo de volta!</Text>
         </View>
 
-        {/* Role toggle */}
-        <View style={[styles.toggle, { backgroundColor: colors.card }]}>
-          {(["customer", "admin"] as UserRole[]).map((r) => (
-            <Pressable key={r} onPress={() => setRole(r)} style={[styles.toggleBtn, { backgroundColor: role === r ? colors.primary : "transparent" }]}>
-              <Feather name={r === "customer" ? "user" : "shield"} size={16} color={role === r ? "#fff" : colors.mutedForeground} />
-              <Text style={{ color: role === r ? "#fff" : colors.mutedForeground, fontFamily: "Inter_600SemiBold", fontSize: 14 }}>
-                {r === "customer" ? "Cliente" : "Admin"}
-              </Text>
-            </Pressable>
-          ))}
-        </View>
-
-        {/* Fields */}
         <View style={styles.form}>
           <View style={[styles.inputGroup, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Feather name="mail" size={18} color={colors.mutedForeground} />
@@ -95,6 +85,7 @@ export default function LoginScreen() {
               style={[styles.input, { color: colors.foreground }]}
             />
           </View>
+
           <View style={[styles.inputGroup, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Feather name="lock" size={18} color={colors.mutedForeground} />
             <TextInput
@@ -110,21 +101,37 @@ export default function LoginScreen() {
             </Pressable>
           </View>
 
-          {role === "admin" && (
-            <View style={[styles.hint, { backgroundColor: colors.accent }]}>
-              <Feather name="info" size={14} color={colors.primary} />
-              <Text style={[styles.hintText, { color: colors.primary }]}>
-                Demo admin: admin@ordercontrol.com / admin123
-              </Text>
-            </View>
-          )}
+          <Button
+            title={loading ? t("loading") : t("login")}
+            onPress={handleLogin}
+            loading={loading}
+            fullWidth
+            style={{ marginTop: 8 }}
+          />
 
-          <Button title={loading ? t("loading") : t("login")} onPress={handleLogin} loading={loading} fullWidth style={{ marginTop: 8 }} />
+          <View style={styles.divider}>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+            <Text style={[styles.dividerText, { color: colors.mutedForeground }]}>ou</Text>
+            <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
+          </View>
 
-          <Pressable onPress={() => router.push("/auth/register")} style={styles.registerLink}>
-            <Text style={[styles.registerText, { color: colors.mutedForeground }]}>
-              {t("dont_have_account")}{" "}
-              <Text style={{ color: colors.primary, fontFamily: "Inter_600SemiBold" }}>Cadastre-se</Text>
+          <Pressable
+            onPress={() => router.push("/auth/register")}
+            style={[styles.outlineBtn, { borderColor: colors.border }]}
+          >
+            <Feather name="user-plus" size={18} color={colors.foreground} />
+            <Text style={[styles.outlineBtnText, { color: colors.foreground }]}>
+              {t("register_customer")}
+            </Text>
+          </Pressable>
+
+          <Pressable
+            onPress={() => router.push("/auth/register-restaurant")}
+            style={[styles.outlineBtn, { borderColor: colors.primary }]}
+          >
+            <Feather name="home" size={18} color={colors.primary} />
+            <Text style={[styles.outlineBtnText, { color: colors.primary }]}>
+              {t("create_restaurant")}
             </Text>
           </Pressable>
         </View>
@@ -139,13 +146,28 @@ const styles = StyleSheet.create({
   logoCircle: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
   appName: { fontSize: 28, fontFamily: "Inter_700Bold" },
   subtitle: { fontSize: 15, fontFamily: "Inter_400Regular" },
-  toggle: { flexDirection: "row", borderRadius: 14, padding: 4, gap: 4, marginBottom: 24 },
-  toggleBtn: { flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, paddingVertical: 10, borderRadius: 10 },
   form: { gap: 14 },
-  inputGroup: { flexDirection: "row", alignItems: "center", gap: 12, paddingHorizontal: 16, paddingVertical: 14, borderRadius: 14, borderWidth: 1 },
+  inputGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
   input: { flex: 1, fontSize: 15, fontFamily: "Inter_400Regular", padding: 0 },
-  hint: { flexDirection: "row", alignItems: "center", gap: 8, padding: 12, borderRadius: 10 },
-  hintText: { fontSize: 12, fontFamily: "Inter_400Regular", flex: 1 },
-  registerLink: { alignItems: "center", paddingVertical: 8 },
-  registerText: { fontSize: 14, fontFamily: "Inter_400Regular" },
+  divider: { flexDirection: "row", alignItems: "center", gap: 10, marginVertical: 4 },
+  dividerLine: { flex: 1, height: 1 },
+  dividerText: { fontSize: 13, fontFamily: "Inter_400Regular" },
+  outlineBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+    paddingVertical: 14,
+    borderRadius: 14,
+    borderWidth: 1.5,
+  },
+  outlineBtnText: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
 });

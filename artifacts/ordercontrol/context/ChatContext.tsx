@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export interface ChatMessage {
   id: string;
@@ -29,24 +30,30 @@ interface ChatContextType {
 }
 
 const ChatContext = createContext<ChatContextType | null>(null);
-const STORAGE_KEY = "@ordercontrol_chats";
 
 export function ChatProvider({ children }: { children: React.ReactNode }) {
+  const { tenantId } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+    if (!tenantId) {
+      setConversations([]);
+      return;
+    }
+    AsyncStorage.getItem(`@ordercontrol_${tenantId}_chats`).then((raw) => {
       if (raw) {
         try {
           setConversations(JSON.parse(raw));
         } catch {}
+      } else {
+        setConversations([]);
       }
     });
-  }, []);
+  }, [tenantId]);
 
-  async function save(data: Conversation[]) {
-    setConversations(data);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  async function persistConversations(data: Conversation[]) {
+    if (!tenantId) return;
+    await AsyncStorage.setItem(`@ordercontrol_${tenantId}_chats`, JSON.stringify(data));
   }
 
   const sendMessage = useCallback(async (
@@ -79,19 +86,13 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
       } else {
         next = [
           ...prev,
-          {
-            customerId,
-            customerName,
-            customerEmail,
-            messages: [msg],
-            lastMessageAt: msg.timestamp,
-          },
+          { customerId, customerName, customerEmail, messages: [msg], lastMessageAt: msg.timestamp },
         ];
       }
-      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      persistConversations(next);
       return next;
     });
-  }, []);
+  }, [tenantId]);
 
   const getConversation = useCallback(
     (customerId: string) => conversations.find((c) => c.customerId === customerId),
@@ -105,10 +106,10 @@ export function ChatProvider({ children }: { children: React.ReactNode }) {
           ? { ...c, messages: c.messages.map((m) => ({ ...m, read: true })) }
           : c
       );
-      AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      persistConversations(next);
       return next;
     });
-  }, []);
+  }, [tenantId]);
 
   const getUnreadCount = useCallback(
     (customerId: string) => {

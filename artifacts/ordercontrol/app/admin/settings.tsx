@@ -19,6 +19,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { useLang } from "@/context/LangContext";
 import { useRestaurant } from "@/context/RestaurantContext";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AdminSettingsScreen() {
   const colors = useColors();
@@ -26,6 +27,7 @@ export default function AdminSettingsScreen() {
   const { t } = useLang();
   const router = useRouter();
   const { restaurant, updateRestaurant } = useRestaurant();
+  const { user, tenantId, changePassword } = useAuth();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
 
   const [name, setName] = useState(restaurant.name);
@@ -43,6 +45,16 @@ export default function AdminSettingsScreen() {
   const [logoUri, setLogoUri] = useState<string | undefined>(restaurant.logoUri);
   const [coverUri, setCoverUri] = useState<string | undefined>(restaurant.coverUri);
   const [saving, setSaving] = useState(false);
+
+  const [codeCopied, setCodeCopied] = useState(false);
+
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [showOld, setShowOld] = useState(false);
+  const [showNew, setShowNew] = useState(false);
 
   useEffect(() => {
     setName(restaurant.name);
@@ -63,7 +75,6 @@ export default function AdminSettingsScreen() {
 
   async function pickImage(type: "logo" | "cover") {
     if (Platform.OS === "web") {
-      // Web: use native file input
       const input = document.createElement("input");
       input.type = "file";
       input.accept = "image/*";
@@ -116,6 +127,38 @@ export default function AdminSettingsScreen() {
     Alert.alert(t("success"), t("changes_saved"));
   }
 
+  async function handleChangePassword() {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      Alert.alert(t("error"), "Preencha todos os campos de senha");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      Alert.alert(t("error"), t("passwords_dont_match"));
+      return;
+    }
+    setSavingPassword(true);
+    const result = await changePassword(oldPassword, newPassword);
+    setSavingPassword(false);
+    if (result.success) {
+      Alert.alert(t("success"), t("password_changed"));
+      setChangingPassword(false);
+      setOldPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } else {
+      Alert.alert(t("error"), result.error ?? "Erro ao alterar senha");
+    }
+  }
+
+  function handleCopyCode() {
+    if (!tenantId) return;
+    if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(tenantId);
+    }
+    setCodeCopied(true);
+    setTimeout(() => setCodeCopied(false), 2000);
+  }
+
   const FIELDS = [
     { label: t("restaurant_name"), value: name, set: setName, icon: "home", keyboard: "default" as const },
     { label: t("tagline"), value: tagline, set: setTagline, icon: "edit-3", keyboard: "default" as const },
@@ -144,6 +187,33 @@ export default function AdminSettingsScreen() {
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 60, gap: 16 }} showsVerticalScrollIndicator={false}>
 
+        {/* Restaurant Code */}
+        {tenantId && (
+          <View style={[styles.card, { backgroundColor: colors.primary + "15", borderWidth: 1.5, borderColor: colors.primary }]}>
+            <View style={styles.codeHeader}>
+              <View style={[styles.codeIconWrap, { backgroundColor: colors.primary + "20" }]}>
+                <Feather name="hash" size={20} color={colors.primary} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.codeTitle, { color: colors.foreground }]}>{t("your_restaurant_code")}</Text>
+                <Text style={[styles.codeSub, { color: colors.mutedForeground }]}>{t("share_code_hint")}</Text>
+              </View>
+            </View>
+            <View style={styles.codeRow}>
+              <Text style={[styles.codeValue, { color: colors.primary }]}>{tenantId}</Text>
+              <Pressable
+                onPress={handleCopyCode}
+                style={[styles.copyBtn, { backgroundColor: codeCopied ? colors.primary : colors.card }]}
+              >
+                <Feather name={codeCopied ? "check" : "copy"} size={16} color={codeCopied ? "#000" : colors.primary} />
+                <Text style={[styles.copyText, { color: codeCopied ? "#000" : colors.primary }]}>
+                  {codeCopied ? t("copied") : t("copy")}
+                </Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+
         {/* Cover Photo */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t("cover_photo")}</Text>
@@ -157,7 +227,7 @@ export default function AdminSettingsScreen() {
               </View>
             )}
             <View style={[styles.changePhotoOverlay, { backgroundColor: colors.primary }]}>
-              <Feather name="camera" size={16} color="#fff" />
+              <Feather name="camera" size={16} color="#000" />
               <Text style={styles.changePhotoOverlayText}>{t("change_photo")}</Text>
             </View>
           </Pressable>
@@ -240,9 +310,64 @@ export default function AdminSettingsScreen() {
           ))}
         </View>
 
+        {/* Change Password */}
+        <View style={[styles.card, { backgroundColor: colors.card, gap: 12 }]}>
+          <View style={styles.passwordHeader}>
+            <View style={[styles.passwordIconWrap, { backgroundColor: colors.muted }]}>
+              <Feather name="lock" size={20} color={colors.mutedForeground} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardTitle, { color: colors.foreground, marginBottom: 0 }]}>{t("change_password")}</Text>
+              <Text style={[styles.logoSub, { color: colors.mutedForeground }]}>
+                {user?.email}
+              </Text>
+            </View>
+            <Pressable onPress={() => setChangingPassword(!changingPassword)}>
+              <Text style={[styles.toggleLink, { color: colors.primary }]}>
+                {changingPassword ? t("cancel") : t("edit")}
+              </Text>
+            </Pressable>
+          </View>
+          {changingPassword && (
+            <View style={{ gap: 12 }}>
+              {[
+                { label: t("current_password"), value: oldPassword, set: setOldPassword, show: showOld, toggle: () => setShowOld(!showOld) },
+                { label: t("new_password"), value: newPassword, set: setNewPassword, show: showNew, toggle: () => setShowNew(!showNew) },
+                { label: t("confirm_new_password"), value: confirmPassword, set: setConfirmPassword, show: showNew, toggle: () => setShowNew(!showNew) },
+              ].map((field) => (
+                <View key={field.label}>
+                  <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>{field.label}</Text>
+                  <View style={[styles.inputGroup, { borderColor: colors.border }]}>
+                    <Feather name="lock" size={16} color={colors.mutedForeground} />
+                    <TextInput
+                      value={field.value}
+                      onChangeText={field.set}
+                      secureTextEntry={!field.show}
+                      style={[styles.input, { color: colors.foreground }]}
+                      placeholderTextColor={colors.mutedForeground}
+                    />
+                    <Pressable onPress={field.toggle}>
+                      <Feather name={field.show ? "eye-off" : "eye"} size={16} color={colors.mutedForeground} />
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+              <Pressable
+                onPress={handleChangePassword}
+                disabled={savingPassword}
+                style={[styles.passwordSaveBtn, { backgroundColor: colors.secondary, opacity: savingPassword ? 0.7 : 1 }]}
+              >
+                <Text style={styles.passwordSaveBtnText}>
+                  {savingPassword ? t("saving") : t("change_password")}
+                </Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+
         {/* Save */}
         <Pressable onPress={handleSave} disabled={saving} style={[styles.saveBtn, { backgroundColor: colors.primary, opacity: saving ? 0.7 : 1 }]}>
-          <Feather name="save" size={18} color="#fff" />
+          <Feather name="save" size={18} color="#000" />
           <Text style={styles.saveBtnText}>{saving ? t("saving") : t("save_changes")}</Text>
         </Pressable>
       </ScrollView>
@@ -256,6 +381,14 @@ const styles = StyleSheet.create({
   title: { fontSize: 20, fontFamily: "Inter_700Bold" },
   card: { borderRadius: 16, padding: 16 },
   cardTitle: { fontSize: 16, fontFamily: "Inter_700Bold", marginBottom: 8 },
+  codeHeader: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 12 },
+  codeIconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  codeTitle: { fontSize: 15, fontFamily: "Inter_700Bold" },
+  codeSub: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
+  codeRow: { flexDirection: "row", alignItems: "center", gap: 12 },
+  codeValue: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: 6, flex: 1 },
+  copyBtn: { flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 10 },
+  copyText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
   toggleRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   toggleInfo: { flexDirection: "row", alignItems: "center", gap: 12 },
   toggleIcon: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
@@ -269,12 +402,17 @@ const styles = StyleSheet.create({
   coverPlaceholder: { width: "100%", height: 160, borderRadius: 12, alignItems: "center", justifyContent: "center", gap: 8 },
   changePhotoText: { fontSize: 13, fontFamily: "Inter_500Medium" },
   changePhotoOverlay: { position: "absolute", bottom: 10, right: 10, flexDirection: "row", alignItems: "center", gap: 6, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  changePhotoOverlayText: { color: "#fff", fontSize: 12, fontFamily: "Inter_600SemiBold" },
+  changePhotoOverlayText: { color: "#000", fontSize: 12, fontFamily: "Inter_600SemiBold" },
   logoPicker: { flexDirection: "row", alignItems: "center", gap: 14 },
   logoImage: { width: 64, height: 64, borderRadius: 16 },
   logoPlaceholder: { width: 64, height: 64, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   logoLabel: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
   logoSub: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
+  passwordHeader: { flexDirection: "row", alignItems: "center", gap: 12 },
+  passwordIconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+  toggleLink: { fontSize: 14, fontFamily: "Inter_500Medium" },
+  passwordSaveBtn: { paddingVertical: 12, borderRadius: 12, alignItems: "center", marginTop: 4 },
+  passwordSaveBtnText: { color: "#fff", fontFamily: "Inter_600SemiBold", fontSize: 15 },
   saveBtn: { flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10, paddingVertical: 16, borderRadius: 14 },
-  saveBtnText: { color: "#fff", fontSize: 16, fontFamily: "Inter_700Bold" },
+  saveBtnText: { color: "#000", fontSize: 16, fontFamily: "Inter_700Bold" },
 });

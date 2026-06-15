@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { RESTAURANT } from "@/data/restaurant";
+import { useAuth } from "@/context/AuthContext";
 
 export interface RestaurantConfig {
   name: string;
@@ -25,7 +26,6 @@ interface RestaurantContextType {
 }
 
 const RestaurantContext = createContext<RestaurantContextType | null>(null);
-const STORAGE_KEY = "@ordercontrol_restaurant";
 
 const DEFAULT: RestaurantConfig = {
   name: RESTAURANT.name,
@@ -45,23 +45,32 @@ const DEFAULT: RestaurantConfig = {
 };
 
 export function RestaurantProvider({ children }: { children: React.ReactNode }) {
+  const { tenantId } = useAuth();
   const [restaurant, setRestaurant] = useState<RestaurantConfig>(DEFAULT);
 
   useEffect(() => {
-    AsyncStorage.getItem(STORAGE_KEY).then((raw) => {
+    if (!tenantId) {
+      setRestaurant(DEFAULT);
+      return;
+    }
+    const key = `@ordercontrol_${tenantId}_restaurant`;
+    AsyncStorage.getItem(key).then((raw) => {
       if (raw) {
         try {
           const saved = JSON.parse(raw);
           setRestaurant({ ...DEFAULT, ...saved });
         } catch {}
+      } else {
+        setRestaurant(DEFAULT);
       }
     });
-  }, []);
+  }, [tenantId]);
 
   async function updateRestaurant(data: Partial<RestaurantConfig>) {
+    if (!tenantId) return;
     const next = { ...restaurant, ...data };
     setRestaurant(next);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    await AsyncStorage.setItem(`@ordercontrol_${tenantId}_restaurant`, JSON.stringify(next));
   }
 
   return (

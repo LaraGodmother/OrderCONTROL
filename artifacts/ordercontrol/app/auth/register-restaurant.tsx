@@ -18,41 +18,84 @@ import { useLang } from "@/context/LangContext";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/Button";
 
-export default function RegisterScreen() {
+export default function RegisterRestaurantScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { t } = useLang();
-  const { register } = useAuth();
+  const { registerRestaurant } = useAuth();
   const router = useRouter();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const bottomPad = Platform.OS === "web" ? 34 : insets.bottom;
 
-  const [name, setName] = useState("");
+  const [restaurantName, setRestaurantName] = useState("");
+  const [adminName, setAdminName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [address, setAddress] = useState("");
-  const [restaurantCode, setRestaurantCode] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [generatedCode, setGeneratedCode] = useState<string | null>(null);
 
   async function handleRegister() {
-    if (!name || !email || !password || !restaurantCode) {
-      Alert.alert(t("error"), "Preencha nome, e-mail, senha e código do restaurante");
+    if (!restaurantName || !adminName || !email || !password) {
+      Alert.alert(t("error"), "Preencha todos os campos obrigatórios");
       return;
     }
     if (password.length < 6) {
       Alert.alert(t("error"), "Senha deve ter pelo menos 6 caracteres");
       return;
     }
-    setLoading(true);
-    const result = await register({ name, email, password, phone, address, restaurantCode });
-    setLoading(false);
-    if (result.success) {
-      router.replace("/(tabs)");
-    } else {
-      Alert.alert(t("error"), result.error ?? "Erro ao cadastrar");
+    if (password !== confirmPassword) {
+      Alert.alert(t("error"), t("passwords_dont_match"));
+      return;
     }
+    setLoading(true);
+    const result = await registerRestaurant({ restaurantName, adminName, email, password });
+    setLoading(false);
+    if (result.success && result.tenantCode) {
+      setGeneratedCode(result.tenantCode);
+    } else {
+      Alert.alert(t("error"), result.error ?? "Erro ao criar restaurante");
+    }
+  }
+
+  if (generatedCode) {
+    return (
+      <View style={[styles.successContainer, { backgroundColor: colors.background }]}>
+        <View style={[styles.successCard, { backgroundColor: colors.card }]}>
+          <View style={[styles.successIcon, { backgroundColor: colors.primary + "20" }]}>
+            <Feather name="check-circle" size={56} color={colors.primary} />
+          </View>
+          <Text style={[styles.successTitle, { color: colors.foreground }]}>
+            {t("restaurant_created")}
+          </Text>
+          <Text style={[styles.successSub, { color: colors.mutedForeground }]}>
+            {t("share_code_hint")}
+          </Text>
+
+          <View style={[styles.codeBox, { backgroundColor: colors.accent, borderColor: colors.primary }]}>
+            <Text style={[styles.codeLabel, { color: colors.mutedForeground }]}>
+              {t("your_restaurant_code")}
+            </Text>
+            <Text style={[styles.codeValue, { color: colors.primary }]}>{generatedCode}</Text>
+          </View>
+
+          <View style={[styles.infoBox, { backgroundColor: colors.muted }]}>
+            <Feather name="info" size={16} color={colors.mutedForeground} />
+            <Text style={[styles.infoText, { color: colors.mutedForeground }]}>
+              {t("code_save_hint")}
+            </Text>
+          </View>
+
+          <Button
+            title={t("access_admin")}
+            onPress={() => router.replace("/admin")}
+            fullWidth
+            style={{ marginTop: 8 }}
+          />
+        </View>
+      </View>
+    );
   }
 
   return (
@@ -70,41 +113,33 @@ export default function RegisterScreen() {
 
         <View style={styles.titleSection}>
           <View style={[styles.logoCircle, { backgroundColor: colors.primary }]}>
-            <Feather name="user-plus" size={32} color="#000" />
+            <Feather name="home" size={32} color="#000" />
           </View>
-          <Text style={[styles.title, { color: colors.foreground }]}>{t("register_customer_title")}</Text>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Preencha os dados abaixo</Text>
+          <Text style={[styles.title, { color: colors.foreground }]}>{t("create_restaurant")}</Text>
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
+            {t("create_restaurant_subtitle")}
+          </Text>
         </View>
 
         <View style={styles.form}>
-          {/* Restaurant code — first field, most important */}
-          <View>
-            <Text style={[styles.codeLabel, { color: colors.mutedForeground }]}>
-              {t("enter_restaurant_code")}
-            </Text>
-            <View style={[styles.codeGroup, { backgroundColor: colors.accent, borderColor: colors.primary }]}>
-              <Feather name="hash" size={20} color={colors.primary} />
-              <TextInput
-                value={restaurantCode}
-                onChangeText={(v) => setRestaurantCode(v.toUpperCase())}
-                placeholder="EX: AB12CD"
-                placeholderTextColor={colors.mutedForeground}
-                autoCapitalize="characters"
-                maxLength={6}
-                style={[styles.codeInput, { color: colors.primary }]}
-              />
-            </View>
-            <Text style={[styles.codeHint, { color: colors.mutedForeground }]}>
-              {t("restaurant_code_hint")}
-            </Text>
+          <View style={[styles.inputGroup, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Feather name="home" size={18} color={colors.mutedForeground} />
+            <TextInput
+              value={restaurantName}
+              onChangeText={setRestaurantName}
+              placeholder={t("restaurant_name")}
+              placeholderTextColor={colors.mutedForeground}
+              autoCapitalize="words"
+              style={[styles.input, { color: colors.foreground }]}
+            />
           </View>
 
           <View style={[styles.inputGroup, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Feather name="user" size={18} color={colors.mutedForeground} />
             <TextInput
-              value={name}
-              onChangeText={setName}
-              placeholder={t("name")}
+              value={adminName}
+              onChangeText={setAdminName}
+              placeholder={t("admin_your_name")}
               placeholderTextColor={colors.mutedForeground}
               autoCapitalize="words"
               style={[styles.input, { color: colors.foreground }]}
@@ -140,30 +175,19 @@ export default function RegisterScreen() {
           </View>
 
           <View style={[styles.inputGroup, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Feather name="phone" size={18} color={colors.mutedForeground} />
+            <Feather name="lock" size={18} color={colors.mutedForeground} />
             <TextInput
-              value={phone}
-              onChangeText={setPhone}
-              placeholder={t("phone")}
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+              placeholder={t("confirm_password")}
               placeholderTextColor={colors.mutedForeground}
-              keyboardType="phone-pad"
-              style={[styles.input, { color: colors.foreground }]}
-            />
-          </View>
-
-          <View style={[styles.inputGroup, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <Feather name="map-pin" size={18} color={colors.mutedForeground} />
-            <TextInput
-              value={address}
-              onChangeText={setAddress}
-              placeholder={t("address")}
-              placeholderTextColor={colors.mutedForeground}
+              secureTextEntry={!showPassword}
               style={[styles.input, { color: colors.foreground }]}
             />
           </View>
 
           <Button
-            title={loading ? t("loading") : t("register")}
+            title={loading ? t("loading") : t("create_restaurant_btn")}
             onPress={handleRegister}
             loading={loading}
             fullWidth
@@ -187,20 +211,8 @@ const styles = StyleSheet.create({
   titleSection: { alignItems: "center", gap: 10, marginBottom: 32 },
   logoCircle: { width: 72, height: 72, borderRadius: 36, alignItems: "center", justifyContent: "center" },
   title: { fontSize: 26, fontFamily: "Inter_700Bold" },
-  subtitle: { fontSize: 15, fontFamily: "Inter_400Regular" },
+  subtitle: { fontSize: 15, fontFamily: "Inter_400Regular", textAlign: "center" },
   form: { gap: 14 },
-  codeLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold", marginBottom: 8 },
-  codeGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-    borderRadius: 14,
-    borderWidth: 2,
-  },
-  codeInput: { flex: 1, fontSize: 22, fontFamily: "Inter_700Bold", letterSpacing: 6, padding: 0 },
-  codeHint: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 6 },
   inputGroup: {
     flexDirection: "row",
     alignItems: "center",
@@ -213,4 +225,29 @@ const styles = StyleSheet.create({
   input: { flex: 1, fontSize: 15, fontFamily: "Inter_400Regular", padding: 0 },
   loginLink: { alignItems: "center", paddingVertical: 8 },
   loginText: { fontSize: 14, fontFamily: "Inter_400Regular" },
+  successContainer: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
+  successCard: { width: "100%", borderRadius: 24, padding: 28, alignItems: "center", gap: 16 },
+  successIcon: { width: 100, height: 100, borderRadius: 50, alignItems: "center", justifyContent: "center" },
+  successTitle: { fontSize: 24, fontFamily: "Inter_700Bold", textAlign: "center" },
+  successSub: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
+  codeBox: {
+    width: "100%",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 20,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    borderWidth: 2,
+  },
+  codeLabel: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  codeValue: { fontSize: 36, fontFamily: "Inter_700Bold", letterSpacing: 8 },
+  infoBox: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 10,
+    padding: 14,
+    borderRadius: 12,
+    width: "100%",
+  },
+  infoText: { flex: 1, fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 18 },
 });

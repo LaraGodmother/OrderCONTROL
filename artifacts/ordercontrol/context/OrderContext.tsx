@@ -1,5 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 export type OrderStatus = "received" | "preparing" | "ready" | "delivering" | "delivered" | "cancelled";
 export type PaymentMethod = "pix" | "cash" | "credit_card" | "pay_on_delivery";
@@ -42,67 +43,35 @@ interface OrderContextType {
 
 const OrderContext = createContext<OrderContextType | null>(null);
 
-const MOCK_ORDERS: Order[] = [
-  {
-    id: "order-1",
-    orderNumber: "#001",
-    customerId: "customer-1",
-    customerName: "João Silva",
-    items: [
-      { productId: "1", name: "X-Burguer Premium", price: 32.9, quantity: 2 },
-      { productId: "5", name: "Refrigerante Lata", price: 6.0, quantity: 2 },
-    ],
-    status: "preparing",
-    paymentMethod: "pix",
-    deliveryType: "delivery",
-    address: "Rua das Flores, 123",
-    neighborhood: "Centro",
-    subtotal: 77.8,
-    deliveryFee: 5.0,
-    total: 82.8,
-    createdAt: new Date(Date.now() - 15 * 60000).toISOString(),
-    estimatedTime: 30,
-  },
-  {
-    id: "order-2",
-    orderNumber: "#002",
-    customerId: "customer-2",
-    customerName: "Maria Santos",
-    items: [
-      { productId: "3", name: "Frango Grelhado", price: 28.9, quantity: 1 },
-    ],
-    status: "received",
-    paymentMethod: "credit_card",
-    deliveryType: "pickup",
-    subtotal: 28.9,
-    deliveryFee: 0,
-    total: 28.9,
-    createdAt: new Date(Date.now() - 5 * 60000).toISOString(),
-    estimatedTime: 20,
-  },
-];
-
 export function OrderProvider({ children }: { children: React.ReactNode }) {
-  const [orders, setOrders] = useState<Order[]>(MOCK_ORDERS);
+  const { tenantId } = useAuth();
+  const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    loadOrders();
-  }, []);
+    if (!tenantId) {
+      setOrders([]);
+      return;
+    }
+    loadOrders(tenantId);
+  }, [tenantId]);
 
-  async function loadOrders() {
+  async function loadOrders(tid: string) {
     try {
-      const stored = await AsyncStorage.getItem("@ordercontrol_orders");
+      const stored = await AsyncStorage.getItem(`@ordercontrol_${tid}_orders`);
       if (stored) {
-        const parsed = JSON.parse(stored);
-        setOrders([...MOCK_ORDERS, ...parsed]);
+        setOrders(JSON.parse(stored));
+      } else {
+        setOrders([]);
       }
-    } catch {}
+    } catch {
+      setOrders([]);
+    }
   }
 
   async function saveOrders(newOrders: Order[]) {
+    if (!tenantId) return;
     setOrders(newOrders);
-    const userOrders = newOrders.filter((o) => !MOCK_ORDERS.find((m) => m.id === o.id));
-    await AsyncStorage.setItem("@ordercontrol_orders", JSON.stringify(userOrders));
+    await AsyncStorage.setItem(`@ordercontrol_${tenantId}_orders`, JSON.stringify(newOrders));
   }
 
   function createOrder(data: Omit<Order, "id" | "orderNumber" | "createdAt" | "status">): Order {
