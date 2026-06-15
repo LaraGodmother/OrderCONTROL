@@ -44,7 +44,7 @@ export default function AdminDashboard() {
   const MENU_ITEMS = [
     { label: t("manage_orders"), icon: "list", route: "/admin/orders", badge: activeOrders.length > 0 ? activeOrders.length : 0 },
     { label: t("chat"), icon: "message-circle", route: "/admin/chat", badge: totalUnread },
-    { label: t("product_name"), icon: "package", route: "/admin/products", badge: 0 },
+    { label: t("products"), icon: "package", route: "/admin/products", badge: 0 },
     { label: t("categories"), icon: "grid", route: "/admin/categories", badge: 0 },
     { label: t("promotions"), icon: "tag", route: "/admin/promotions", badge: 0 },
     { label: t("settings"), icon: "settings", route: "/admin/settings", badge: 0 },

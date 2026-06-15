@@ -38,11 +38,11 @@ export default function RegisterRestaurantScreen() {
 
   async function handleRegister() {
     if (!restaurantName || !adminName || !email || !password) {
-      Alert.alert(t("error"), "Preencha todos os campos obrigatórios");
+      Alert.alert(t("error"), t("fill_all_required"));
       return;
     }
     if (password.length < 6) {
-      Alert.alert(t("error"), "Senha deve ter pelo menos 6 caracteres");
+      Alert.alert(t("error"), t("password_min_length"));
       return;
     }
     if (password !== confirmPassword) {
@@ -55,7 +55,7 @@ export default function RegisterRestaurantScreen() {
     if (result.success && result.tenantCode) {
       setGeneratedCode(result.tenantCode);
     } else {
-      Alert.alert(t("error"), result.error ?? "Erro ao criar restaurante");
+      Alert.alert(t("error"), result.error ?? t("error_create_restaurant"));
     }
   }
 

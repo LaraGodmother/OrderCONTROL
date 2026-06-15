@@ -163,7 +163,7 @@ export default function AdminReportsScreen() {
         Alert.alert("PDF", `Salvo em:\n${uri}`);
       }
     } catch {
-      Alert.alert(t("error"), "Erro ao gerar o relatório PDF.");
+      Alert.alert(t("error"), t("error_pdf"));
     } finally {
       setExporting(false);
     }

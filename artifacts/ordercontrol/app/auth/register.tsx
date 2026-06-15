@@ -38,11 +38,11 @@ export default function RegisterScreen() {
 
   async function handleRegister() {
     if (!name || !email || !password || !restaurantCode) {
-      Alert.alert(t("error"), "Preencha nome, e-mail, senha e código do restaurante");
+      Alert.alert(t("error"), t("fill_required_fields"));
       return;
     }
     if (password.length < 6) {
-      Alert.alert(t("error"), "Senha deve ter pelo menos 6 caracteres");
+      Alert.alert(t("error"), t("password_min_length"));
       return;
     }
     setLoading(true);
@@ -51,7 +51,7 @@ export default function RegisterScreen() {
     if (result.success) {
       router.replace("/(tabs)");
     } else {
-      Alert.alert(t("error"), result.error ?? "Erro ao cadastrar");
+      Alert.alert(t("error"), result.error ?? t("error_register"));
     }
   }
 
@@ -73,7 +73,7 @@ export default function RegisterScreen() {
             <Feather name="user-plus" size={32} color="#000" />
           </View>
           <Text style={[styles.title, { color: colors.foreground }]}>{t("register_customer_title")}</Text>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Preencha os dados abaixo</Text>
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{t("fill_form_below")}</Text>
         </View>
 
         <View style={styles.form}>

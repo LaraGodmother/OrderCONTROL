@@ -1,0 +1,1 @@
+- [OrderControl app config](ordercontrol-config.md) — Expo 54 multitenant food ordering app; workflow uses fixed port 8081 (not $PORT); dev script has --web flag

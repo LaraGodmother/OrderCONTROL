@@ -17,6 +17,7 @@ import { LangProvider } from "@/context/LangContext";
 import { OrderProvider } from "@/context/OrderContext";
 import { RestaurantProvider } from "@/context/RestaurantContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { ConsentBanner } from "@/components/ConsentBanner";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -68,7 +69,9 @@ export default function RootLayout() {
                           <Stack.Screen name="admin/settings" options={{ headerShown: false }} />
                           <Stack.Screen name="admin/chat" options={{ headerShown: false }} />
                           <Stack.Screen name="privacy-policy" options={{ headerShown: false }} />
+                          <Stack.Screen name="terms-of-service" options={{ headerShown: false }} />
                         </Stack>
+                        <ConsentBanner />
                       </ChatProvider>
                     </CartProvider>
                   </OrderProvider>

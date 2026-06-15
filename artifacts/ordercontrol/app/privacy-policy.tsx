@@ -72,7 +72,7 @@ export default function PrivacyPolicyScreen() {
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </Pressable>
-        <Text style={[styles.title, { color: colors.foreground }]}>Política de Privacidade</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>{t("privacy_policy")}</Text>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} showsVerticalScrollIndicator={false}>

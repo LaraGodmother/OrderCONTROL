@@ -34,7 +34,7 @@ export default function LoginScreen() {
 
   async function handleLogin() {
     if (!email || !password) {
-      Alert.alert(t("error"), "Preencha e-mail e senha");
+      Alert.alert(t("error"), t("fill_email_password"));
       return;
     }
     setLoading(true);
@@ -47,7 +47,7 @@ export default function LoginScreen() {
         router.replace("/(tabs)");
       }
     } else {
-      Alert.alert(t("error"), "E-mail ou senha incorretos. Verifique e tente novamente.");
+      Alert.alert(t("error"), t("invalid_credentials"));
     }
   }
 
@@ -69,7 +69,7 @@ export default function LoginScreen() {
             <Feather name="shopping-bag" size={32} color="#000" />
           </View>
           <Text style={[styles.appName, { color: colors.foreground }]}>OrderControl</Text>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>Bem-vindo de volta!</Text>
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{t("welcome_back")}</Text>
         </View>
 
         <View style={styles.form}>
@@ -111,7 +111,7 @@ export default function LoginScreen() {
 
           <View style={styles.divider}>
             <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
-            <Text style={[styles.dividerText, { color: colors.mutedForeground }]}>ou</Text>
+            <Text style={[styles.dividerText, { color: colors.mutedForeground }]}>{t("or")}</Text>
             <View style={[styles.dividerLine, { backgroundColor: colors.border }]} />
           </View>
 

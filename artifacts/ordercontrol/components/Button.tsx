@@ -40,7 +40,7 @@ export function Button({
   }[variant];
 
   const textColor = {
-    primary: "#fff",
+    primary: "#000",
     secondary: "#fff",
     outline: colors.primary,
     ghost: colors.foreground,

@@ -60,9 +60,45 @@ interface AuthContextType {
 
 const TENANTS_KEY = "@ordercontrol_tenants";
 const SESSION_KEY = "@ordercontrol_session";
+const SEED_KEY = "@ordercontrol_seeded_v1";
+const DEFAULT_TENANT_CODE = "DEMO01";
 
 function usersKey(tenantId: string) {
   return `@ordercontrol_${tenantId}_users`;
+}
+
+async function seedDefaultAdmin() {
+  try {
+    const already = await AsyncStorage.getItem(SEED_KEY);
+    if (already) return;
+    const tenants = await getTenants();
+    if (!tenants[DEFAULT_TENANT_CODE]) {
+      tenants[DEFAULT_TENANT_CODE] = {
+        adminEmail: "admin@ordercontrol.com",
+        restaurantName: "OrderControl Restaurant",
+        createdAt: new Date().toISOString(),
+      };
+      await AsyncStorage.setItem(TENANTS_KEY, JSON.stringify(tenants));
+      const adminUser = {
+        id: "admin_default",
+        name: "Administrador",
+        email: "admin@ordercontrol.com",
+        role: "admin" as const,
+        tenantId: DEFAULT_TENANT_CODE,
+        password: "admin123",
+      };
+      await AsyncStorage.setItem(
+        usersKey(DEFAULT_TENANT_CODE),
+        JSON.stringify({ [adminUser.id]: adminUser })
+      );
+      await AsyncStorage.setItem(
+        `@ordercontrol_${DEFAULT_TENANT_CODE}_restaurant`,
+        JSON.stringify({ name: "OrderControl Restaurant" })
+      );
+    }
+    await AsyncStorage.setItem(SEED_KEY, "1");
+  } catch {
+  }
 }
 
 function generateTenantCode(): string {
@@ -100,7 +136,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    loadSession();
+    seedDefaultAdmin().then(() => loadSession());
   }, []);
 
   async function loadSession() {

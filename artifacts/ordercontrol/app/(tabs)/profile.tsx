@@ -60,7 +60,7 @@ export default function ProfileScreen() {
 
   async function handleChangePassword() {
     if (!oldPassword || !newPassword || !confirmPassword) {
-      Alert.alert(t("error"), "Preencha todos os campos de senha");
+      Alert.alert(t("error"), t("fill_password_fields"));
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -77,7 +77,7 @@ export default function ProfileScreen() {
       setNewPassword("");
       setConfirmPassword("");
     } else {
-      Alert.alert(t("error"), result.error ?? "Erro ao alterar senha");
+      Alert.alert(t("error"), result.error ?? t("error_change_password"));
     }
   }
 
@@ -309,7 +309,18 @@ export default function ProfileScreen() {
           <View style={[styles.menuItemIcon, { backgroundColor: "#22A45D20" }]}>
             <Feather name="shield" size={18} color="#22A45D" />
           </View>
-          <Text style={[styles.menuItemText, { color: colors.foreground }]}>Política de Privacidade</Text>
+          <Text style={[styles.menuItemText, { color: colors.foreground }]}>{t("privacy_policy")}</Text>
+          <Feather name="chevron-right" size={18} color={colors.mutedForeground} style={{ marginLeft: "auto" as any }} />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/terms-of-service")}
+          style={[styles.menuItem, { borderBottomColor: colors.border }]}
+        >
+          <View style={[styles.menuItemIcon, { backgroundColor: "#2563EB20" }]}>
+            <Feather name="file-text" size={18} color="#2563EB" />
+          </View>
+          <Text style={[styles.menuItemText, { color: colors.foreground }]}>{t("terms_of_service")}</Text>
           <Feather name="chevron-right" size={18} color={colors.mutedForeground} style={{ marginLeft: "auto" as any }} />
         </Pressable>
 
