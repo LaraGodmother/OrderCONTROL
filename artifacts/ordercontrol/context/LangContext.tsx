@@ -245,6 +245,9 @@ const translations: Record<Language, Record<string, string>> = {
     error_create_restaurant: "Erro ao criar restaurante",
     fill_form_below: "Preencha os dados abaixo",
     error_pdf: "Erro ao gerar o relatório PDF.",
+    notifications: "Notificações",
+    no_notifications: "Nenhuma notificação",
+    notifications_appear_here: "Atualizações dos seus pedidos aparecerão aqui",
   },
   "en": {
     app_name: "OrderControl",
@@ -485,6 +488,9 @@ const translations: Record<Language, Record<string, string>> = {
     error_create_restaurant: "Error creating restaurant",
     fill_form_below: "Fill in the details below",
     error_pdf: "Error generating PDF report.",
+    notifications: "Notifications",
+    no_notifications: "No notifications",
+    notifications_appear_here: "Order updates will appear here",
   },
   "pt-PT": {
     app_name: "OrderControl",

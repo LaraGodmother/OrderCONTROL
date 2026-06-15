@@ -15,6 +15,7 @@ import { useColors } from "@/hooks/useColors";
 import { useLang, Language } from "@/context/LangContext";
 import { RESTAURANT, PRODUCTS, CATEGORIES } from "@/data/restaurant";
 import { useRestaurant } from "@/context/RestaurantContext";
+import { useNotifications } from "@/context/NotificationContext";
 import { ProductCard } from "@/components/ProductCard";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 
@@ -31,6 +32,7 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const { t, language, setLanguage, formatCurrency } = useLang();
   const { restaurant } = useRestaurant();
+  const { unreadCount } = useNotifications();
   const router = useRouter();
   const topPad = Platform.OS === "web" ? 67 : insets.top;
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -100,6 +102,11 @@ export default function HomeScreen() {
               </View>
               <Pressable onPress={() => router.push("/notifications")} style={styles.notifBtn}>
                 <Feather name="bell" size={22} color="#fff" />
+                {unreadCount > 0 && (
+                  <View style={{ position: "absolute", top: -4, right: -4, backgroundColor: "#F59E0B", borderRadius: 10, minWidth: 18, height: 18, alignItems: "center", justifyContent: "center", paddingHorizontal: 4 }}>
+                    <Text style={{ color: "#000", fontSize: 10, fontFamily: "Inter_700Bold" }}>{unreadCount > 9 ? "9+" : unreadCount}</Text>
+                  </View>
+                )}
               </Pressable>
             </View>
             <View style={styles.statusRow}>

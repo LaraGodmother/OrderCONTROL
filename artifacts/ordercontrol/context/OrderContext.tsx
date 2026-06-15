@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 export type OrderStatus = "received" | "preparing" | "ready" | "delivering" | "delivered" | "cancelled";
@@ -33,12 +33,15 @@ export interface Order {
   estimatedTime: number;
 }
 
+type StatusChangeListener = (order: Order, newStatus: OrderStatus, prevStatus: OrderStatus) => void;
+
 interface OrderContextType {
   orders: Order[];
   createOrder: (data: Omit<Order, "id" | "orderNumber" | "createdAt" | "status">) => Order;
   updateOrderStatus: (id: string, status: OrderStatus) => void;
   getCustomerOrders: (customerId: string) => Order[];
   getAllOrders: () => Order[];
+  onStatusChange: (listener: StatusChangeListener) => () => void;
 }
 
 const OrderContext = createContext<OrderContextType | null>(null);
@@ -46,6 +49,7 @@ const OrderContext = createContext<OrderContextType | null>(null);
 export function OrderProvider({ children }: { children: React.ReactNode }) {
   const { tenantId } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
+  const listenersRef = useRef<Set<StatusChangeListener>>(new Set());
 
   useEffect(() => {
     if (!tenantId) {
@@ -83,11 +87,18 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
       createdAt: new Date().toISOString(),
     };
     saveOrders([...orders, newOrder]);
+    listenersRef.current.forEach((l) => l(newOrder, "received", "received"));
     return newOrder;
   }
 
   function updateOrderStatus(id: string, status: OrderStatus) {
-    saveOrders(orders.map((o) => (o.id === id ? { ...o, status } : o)));
+    const order = orders.find((o) => o.id === id);
+    const prevStatus = order?.status ?? status;
+    const updated = orders.map((o) => (o.id === id ? { ...o, status } : o));
+    saveOrders(updated);
+    if (order) {
+      listenersRef.current.forEach((l) => l({ ...order, status }, status, prevStatus));
+    }
   }
 
   function getCustomerOrders(customerId: string) {
@@ -98,8 +109,15 @@ export function OrderProvider({ children }: { children: React.ReactNode }) {
     return orders;
   }
 
+  function onStatusChange(listener: StatusChangeListener): () => void {
+    listenersRef.current.add(listener);
+    return () => {
+      listenersRef.current.delete(listener);
+    };
+  }
+
   return (
-    <OrderContext.Provider value={{ orders, createOrder, updateOrderStatus, getCustomerOrders, getAllOrders }}>
+    <OrderContext.Provider value={{ orders, createOrder, updateOrderStatus, getCustomerOrders, getAllOrders, onStatusChange }}>
       {children}
     </OrderContext.Provider>
   );
